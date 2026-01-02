@@ -448,7 +448,7 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
                       }}
                       title="Compare Content"
                       disabled={content.length < 2}
-                      style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '8px 12px', display: 'none', alignItems: 'center', gap: '6px' }}
                     >
                       <GitCompare size={18} />
                     </button>

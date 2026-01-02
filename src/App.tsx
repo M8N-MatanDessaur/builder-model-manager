@@ -261,6 +261,15 @@ function App() {
         spaceName={spaceName}
         onNavigate={handleNavigate}
         onDisconnect={handleDisconnect}
+        onSettingsUpdate={() => {
+          // Trigger re-render to reload AI insights with new API key
+          setCurrentView('list');
+          setTimeout(() => {
+            if (currentView !== 'list') {
+              setCurrentView(currentView);
+            }
+          }, 0);
+        }}
       />
 
       {currentPage === 'models' && (

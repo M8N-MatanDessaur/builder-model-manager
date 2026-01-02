@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, FileJson } from 'lucide-react';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
@@ -6,6 +6,7 @@ import { FieldEditor } from './FieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
 import { builderApi } from '../services/builderApi';
 import { LoadingSpinner } from './LoadingSpinner';
+import { AIInsight } from './AIInsight';
 
 interface ModelDetailProps {
   model: BuilderModel;
@@ -148,6 +149,12 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
   const [success, setSuccess] = useState('');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [allModels, setAllModels] = useState<BuilderModel[]>([]);
+
+  // Load all models for AI context
+  useEffect(() => {
+    builderApi.getModels().then(models => setAllModels(models)).catch(() => {});
+  }, []);
 
   const handleEditField = (field: BuilderField, path: string[]) => {
     setEditingField({ field, path });
@@ -299,6 +306,15 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
 
       {error && <div className="error">{error}</div>}
       {success && <div className="success">{success}</div>}
+
+      <AIInsight
+        context={{
+          type: 'model',
+          model: model,
+          allModels: allModels,
+        }}
+        position="top"
+      />
 
       <div className="flex-between" style={{ alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
         <div>

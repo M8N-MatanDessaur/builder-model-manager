@@ -3,6 +3,7 @@
 export interface BuilderCredentials {
   privateKey: string;
   publicKey: string;
+  openaiApiKey?: string;
 }
 
 export interface BuilderField {

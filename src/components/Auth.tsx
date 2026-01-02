@@ -9,6 +9,7 @@ interface AuthProps {
 export function Auth({ onAuthenticated }: AuthProps) {
   const [privateKey, setPrivateKey] = useState('');
   const [publicKey, setPublicKey] = useState('');
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +19,7 @@ export function Auth({ onAuthenticated }: AuthProps) {
     setLoading(true);
 
     try {
-      builderApi.setCredentials({ privateKey, publicKey });
+      builderApi.setCredentials({ privateKey, publicKey, openaiApiKey });
       const isValid = await builderApi.testConnection();
 
       if (isValid) {
@@ -74,6 +75,20 @@ export function Auth({ onAuthenticated }: AuthProps) {
               onChange={(e) => setPublicKey(e.target.value)}
               placeholder="Enter your Public API Key (bpk-...)"
               required
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="openaiApiKey">
+              OpenAI API Key <span style={{ color: '#666', fontSize: '12px' }}>(Optional - for AI features)</span>
+            </label>
+            <input
+              id="openaiApiKey"
+              type="password"
+              value={openaiApiKey}
+              onChange={(e) => setOpenaiApiKey(e.target.value)}
+              placeholder="sk-proj-... (optional)"
               disabled={loading}
             />
           </div>

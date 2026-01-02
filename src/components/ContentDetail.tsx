@@ -5,6 +5,7 @@ import { ContentFieldEditor } from './ContentFieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
 import { builderApi } from '../services/builderApi';
 import { LoadingSpinner } from './LoadingSpinner';
+import { AIInsight } from './AIInsight';
 
 interface ContentDetailProps {
   content: BuilderContent;
@@ -325,6 +326,15 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
 
       {error && <div className="error">{error}</div>}
       {success && <div className="success">{success}</div>}
+
+      <AIInsight
+        context={{
+          type: 'content',
+          content: content,
+          model: model,
+        }}
+        position="top"
+      />
 
       <div className="flex-between" style={{ alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
         <div>
