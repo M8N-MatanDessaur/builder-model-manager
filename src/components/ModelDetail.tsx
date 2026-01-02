@@ -23,12 +23,25 @@ interface FieldRowProps {
 
 function FieldRow({ field, depth = 0, path, onEditField }: FieldRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const indent = depth * 24;
   const hasChildren = field.subFields && field.subFields.length > 0;
   const currentPath = [...path, field.name];
 
   // Calculate background color based on nesting depth
-  const getDepthBackground = (depth: number, isExpanded: boolean): string => {
+  const getDepthBackground = (depth: number, isExpanded: boolean, isHovered: boolean): string => {
+    // Hovered state takes priority
+    if (isHovered) {
+      const hoverBackgrounds = [
+        '#252525',
+        '#232323',
+        '#212121',
+        '#1f1f1f',
+        '#1d1d1d',
+      ];
+      return hoverBackgrounds[Math.min(depth, hoverBackgrounds.length - 1)];
+    }
+
     // Expanded parents get a distinct highlight
     if (isExpanded && hasChildren) {
       const expandedBackgrounds = [
@@ -71,12 +84,15 @@ function FieldRow({ field, depth = 0, path, onEditField }: FieldRowProps) {
         className={`field-row ${hasChildren ? 'field-row-expandable' : 'field-row-editable'} ${isExpanded && hasChildren ? 'field-row-sticky' : ''}`}
         style={{
           paddingLeft: `${indent + 16}px`,
-          backgroundColor: getDepthBackground(depth, isExpanded),
+          backgroundColor: getDepthBackground(depth, isExpanded, isHovered),
           position: isExpanded && hasChildren ? 'sticky' : 'relative',
           top: isExpanded && hasChildren ? `${54 + (depth * 49)}px` : 'auto',
           zIndex: isExpanded && hasChildren ? 104 - depth : 'auto',
+          transition: 'background-color 0.15s ease',
         }}
         onClick={handleRowClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="field-name">
           {hasChildren && (
