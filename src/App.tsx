@@ -122,6 +122,8 @@ function App() {
     } catch (error) {
       console.error('Failed to fetch organization:', error);
     }
+    // Load models on first authentication
+    await loadModels();
   };
 
   const handleDisconnect = () => {
