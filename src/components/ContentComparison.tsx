@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, ArrowLeftRight } from 'lucide-react';
+import { X, ArrowLeftRight, ChevronDown, ChevronRight } from 'lucide-react';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 
 interface ContentComparisonProps {
@@ -253,8 +253,9 @@ export function ContentComparison({ leftContent, rightContent, onClose }: Conten
                   >
                     {diff.path}
                     {hasComplexValue && (
-                      <span style={{ marginLeft: '8px', fontSize: '10px', color: '#999' }}>
-                        {isExpanded ? '▼' : '▶'} Click to {isExpanded ? 'collapse' : 'expand'}
+                      <span style={{ marginLeft: '8px', fontSize: '10px', color: '#999', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                        Click to {isExpanded ? 'collapse' : 'expand'}
                       </span>
                     )}
                   </div>

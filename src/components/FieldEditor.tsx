@@ -27,10 +27,23 @@ export function FieldEditor({ field, onSave, onCancel }: FieldEditorProps) {
     }
   }, [jsonContent]);
 
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   const syntaxHighlight = (json: string): string => {
-    return json
-      .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+    // First escape HTML entities to prevent HTML injection
+    const escaped = escapeHtml(json);
+
+    // Then apply syntax highlighting with non-greedy matching
+    return escaped
+      .replace(/&quot;([^&quot;]+?)&quot;:/g, '<span class="json-key">&quot;$1&quot;</span>:')
+      .replace(/: &quot;(.*?)&quot;/g, ': <span class="json-string">&quot;$1&quot;</span>')
       .replace(/: (-?\d+\.?\d*)(,?)$/gm, ': <span class="json-number">$1</span>$2')
       .replace(/: (true|false)(,?)$/gm, ': <span class="json-boolean">$1</span>$2')
       .replace(/: (null)(,?)$/gm, ': <span class="json-null">$1</span>$2');
@@ -107,8 +120,8 @@ export function FieldEditor({ field, onSave, onCancel }: FieldEditorProps) {
         />
       )}
 
-      <div className="modal-overlay" onClick={onCancel}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay">
+        <div className="modal-content">
           <h2>Edit Field: {field.name}</h2>
 
           {error && <div className="error">{error}</div>}
@@ -116,7 +129,6 @@ export function FieldEditor({ field, onSave, onCancel }: FieldEditorProps) {
         <div className="modal-editor" style={{ position: 'relative' }}>
           <pre
             ref={highlightRef}
-            className="monospace"
             style={{
               position: 'absolute',
               top: 0,
@@ -124,21 +136,26 @@ export function FieldEditor({ field, onSave, onCancel }: FieldEditorProps) {
               width: '100%',
               height: '100%',
               margin: 0,
-              padding: 'var(--spacing-md)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-secondary)',
-              color: 'var(--text-secondary)',
+              padding: '16px',
+              border: '1px solid #333333',
+              fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+              fontSize: '14px',
+              fontWeight: 400,
               lineHeight: '1.5',
-              pointerEvents: 'none',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word',
+              wordBreak: 'normal',
+              overflowWrap: 'break-word',
               overflow: 'auto',
-              whiteSpace: 'pre',
-              wordWrap: 'normal',
+              boxSizing: 'border-box',
+              backgroundColor: '#1a1a1a',
+              color: '#a0a0a0',
+              pointerEvents: 'none',
             }}
             dangerouslySetInnerHTML={{ __html: syntaxHighlight(jsonContent) }}
           />
           <textarea
             ref={textareaRef}
-            className="editor"
             value={jsonContent}
             onChange={(e) => setJsonContent(e.target.value)}
             onScroll={handleScroll}
@@ -152,11 +169,23 @@ export function FieldEditor({ field, onSave, onCancel }: FieldEditorProps) {
               width: '100%',
               height: '100%',
               margin: 0,
-              padding: 'var(--spacing-md)',
+              padding: '16px',
+              border: '1px solid #333333',
+              fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+              fontSize: '14px',
+              fontWeight: 400,
               lineHeight: '1.5',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word',
+              wordBreak: 'normal',
+              overflowWrap: 'break-word',
+              overflow: 'auto',
+              boxSizing: 'border-box',
               backgroundColor: 'transparent',
               color: 'transparent',
-              caretColor: 'var(--text-primary)',
+              caretColor: '#e0e0e0',
+              outline: 'none',
+              resize: 'none',
             }}
           />
         </div>

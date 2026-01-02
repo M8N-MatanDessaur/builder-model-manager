@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -77,12 +78,25 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
     }
   }, [jsonContent]);
 
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   const syntaxHighlight = (json: string): string => {
-    return json
+    // First escape HTML entities to prevent HTML injection
+    const escaped = escapeHtml(json);
+
+    // Then apply syntax highlighting with non-greedy matching
+    return escaped
       // Keys (property names in quotes followed by colon)
-      .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+      .replace(/&quot;([^&quot;]+?)&quot;:/g, '<span class="json-key">&quot;$1&quot;</span>:')
       // String values (in quotes)
-      .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+      .replace(/: &quot;(.*?)&quot;/g, ': <span class="json-string">&quot;$1&quot;</span>')
       // Numbers
       .replace(/: (-?\d+\.?\d*)(,?)$/gm, ': <span class="json-number">$1</span>$2')
       // Booleans
@@ -197,7 +211,10 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
 
       <div className="container">
         <div className="mb-lg">
-          <button onClick={onCancel}>← Cancel</button>
+          <button onClick={onCancel} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} />
+            Cancel
+          </button>
         </div>
 
       <h1>{content ? `Edit ${content.name}` : `Create ${model.name}`}</h1>
@@ -210,7 +227,6 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
       <div className="editor-container" style={{ position: 'relative' }}>
         <pre
           ref={highlightRef}
-          className="monospace"
           style={{
             position: 'absolute',
             top: 0,
@@ -218,21 +234,26 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
             width: '100%',
             height: '100%',
             margin: 0,
-            padding: 'var(--spacing-md)',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-secondary)',
-            color: 'var(--text-secondary)',
+            padding: '16px',
+            border: '1px solid #333333',
+            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+            fontSize: '14px',
+            fontWeight: 400,
             lineHeight: '1.5',
-            pointerEvents: 'none',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            wordBreak: 'normal',
+            overflowWrap: 'break-word',
             overflow: 'auto',
-            whiteSpace: 'pre',
-            wordWrap: 'normal',
+            boxSizing: 'border-box',
+            backgroundColor: '#1a1a1a',
+            color: '#a0a0a0',
+            pointerEvents: 'none',
           }}
           dangerouslySetInnerHTML={{ __html: syntaxHighlight(jsonContent) }}
         />
         <textarea
           ref={textareaRef}
-          className="editor"
           value={jsonContent}
           onChange={(e) => {
             setJsonContent(e.target.value);
@@ -247,48 +268,46 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
             width: '100%',
             height: '100%',
             margin: 0,
-            padding: 'var(--spacing-md)',
+            padding: '16px',
+            border: '1px solid #333333',
+            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+            fontSize: '14px',
+            fontWeight: 400,
             lineHeight: '1.5',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            wordBreak: 'normal',
+            overflowWrap: 'break-word',
+            overflow: 'auto',
+            boxSizing: 'border-box',
             backgroundColor: 'transparent',
             color: 'transparent',
-            caretColor: 'var(--text-primary)',
+            caretColor: '#e0e0e0',
+            outline: 'none',
+            resize: 'none',
           }}
         />
-        <div className="editor-footer">
-          {validationError && (
-            <div
-              className={validationError === 'JSON is valid' ? 'success' : 'error'}
-              style={{ marginBottom: 'var(--spacing-md)' }}
-            >
-              {validationError}
-            </div>
-          )}
-          <div className="flex-end">
-            <button onClick={onCancel} disabled={saving}>
-              Cancel
-            </button>
-            <button onClick={validateJson} disabled={saving}>
-              Validate JSON
-            </button>
-            <button className="primary" onClick={handleSaveClick} disabled={saving}>
-              {content ? 'Update Content' : 'Create Content'}
-            </button>
-          </div>
-        </div>
       </div>
 
-      <div className="mt-lg">
-        <h2>Expected Format</h2>
-        <div className="bordered-box">
-          <pre className="monospace">
-{`{
-  "name": "Content Entry Name",
-  "published": "draft" | "published" | "archived",
-  "data": {
-    // Your content data matching the model fields
-  }
-}`}
-          </pre>
+      <div className="editor-footer">
+        {validationError && (
+          <div
+            className={validationError === 'JSON is valid' ? 'success' : 'error'}
+            style={{ marginBottom: 'var(--spacing-md)' }}
+          >
+            {validationError}
+          </div>
+        )}
+        <div className="flex-end">
+          <button onClick={onCancel} disabled={saving}>
+            Cancel
+          </button>
+          <button onClick={validateJson} disabled={saving}>
+            Validate JSON
+          </button>
+          <button className="primary" onClick={handleSaveClick} disabled={saving}>
+            {content ? 'Update Content' : 'Create Content'}
+          </button>
         </div>
       </div>
     </div>

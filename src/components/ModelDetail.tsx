@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, FileJson } from 'lucide-react';
+import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil } from 'lucide-react';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 import { FieldEditor } from './FieldEditor';
@@ -97,16 +97,22 @@ function FieldRow({ field, depth = 0, path, onEditField }: FieldRowProps) {
       >
         <div className="field-name">
           {hasChildren && (
-            <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+            <span className="expand-icon">
+              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </span>
           )}
-          {depth > 0 && !hasChildren && <span className="child-icon">↳</span>}
+          {depth > 0 && !hasChildren && (
+            <span className="child-icon">
+              <CornerDownRight size={14} />
+            </span>
+          )}
           {field.name}
           <button
             className="edit-icon-button"
             onClick={handleEditClick}
             title={hasChildren ? "Edit this object and all its children" : "Edit this field"}
           >
-            ✎
+            <Pencil size={14} />
           </button>
         </div>
         <div className="field-type">
@@ -275,7 +281,10 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
 
       <div className="container">
         <div className="mb-lg">
-          <button onClick={onBack}>← Back to List</button>
+          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} />
+            Back to List
+          </button>
         </div>
 
       <div className="flex-between mb-lg">
@@ -338,8 +347,8 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
           </button>
         </div>
       </div>
-      <p className="text-secondary mb-md">
-        Click ✎ to edit any field • Click parent rows to expand/collapse
+      <p className="text-secondary mb-md" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        Click <Pencil size={14} style={{ display: 'inline' }} /> to edit any field • Click parent rows to expand/collapse
       </p>
       <div className="field-list mb-lg">
         {model.fields.map((field, index) => (

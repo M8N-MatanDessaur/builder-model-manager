@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileJson } from 'lucide-react';
+import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil } from 'lucide-react';
 import type { BuilderContent, BuilderModel, BuilderField } from '../types/builder';
 import { ContentFieldEditor } from './ContentFieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -21,7 +21,7 @@ interface DataRowProps {
   fieldDef?: BuilderField;
   depth?: number;
   path: string[];
-  onEditField: (path: string[], value: any) => void;
+  onEditField: (path: string[], value: any, fieldDef?: BuilderField) => void;
 }
 
 function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField }: DataRowProps) {
@@ -60,13 +60,13 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
       setIsExpanded(!isExpanded);
     } else {
       e.stopPropagation();
-      onEditField(currentPath, fieldValue);
+      onEditField(currentPath, fieldValue, fieldDef);
     }
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onEditField(currentPath, fieldValue);
+    onEditField(currentPath, fieldValue, fieldDef);
   };
 
   const formatValue = (value: any): string => {
@@ -95,16 +95,22 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
       >
         <div className="field-name">
           {(hasChildren || isArray) && (
-            <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+            <span className="expand-icon">
+              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </span>
           )}
-          {depth > 0 && !hasChildren && !isArray && <span className="child-icon">↳</span>}
+          {depth > 0 && !hasChildren && !isArray && (
+            <span className="child-icon">
+              <CornerDownRight size={14} />
+            </span>
+          )}
           {fieldName}
           <button
             className="edit-icon-button"
             onClick={handleEditClick}
             title={hasChildren || isArray ? "Edit this entire structure" : "Edit this value"}
           >
-            ✎
+            <Pencil size={14} />
           </button>
         </div>
         <div className="field-type">
@@ -157,15 +163,15 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
 }
 
 export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: ContentDetailProps) {
-  const [editingField, setEditingField] = useState<{ path: string[]; value: any } | null>(null);
+  const [editingField, setEditingField] = useState<{ path: string[]; value: any; fieldDef?: BuilderField } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const handleEditField = (path: string[], value: any) => {
-    setEditingField({ path, value });
+  const handleEditField = (path: string[], value: any, fieldDef?: BuilderField) => {
+    setEditingField({ path, value, fieldDef });
     setError('');
     setSuccess('');
   };
@@ -284,7 +290,10 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
 
       <div className="container">
         <div className="mb-lg">
-          <button onClick={onBack}>← Back to List</button>
+          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} />
+            Back to List
+          </button>
         </div>
 
       <div className="flex-between mb-lg">
@@ -358,8 +367,8 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
           </button>
         </div>
       </div>
-      <p className="text-secondary mb-md">
-        Click ✎ to edit any field • Click parent rows to expand/collapse
+      <p className="text-secondary mb-md" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        Click <Pencil size={14} style={{ display: 'inline' }} /> to edit any field • Click parent rows to expand/collapse
       </p>
       <div className="field-list mb-lg">
         {Object.entries(content.data).map(([key, value]) => {
@@ -381,6 +390,7 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
         <ContentFieldEditor
           path={editingField.path}
           value={editingField.value}
+          fieldType={editingField.fieldDef?.type}
           onSave={handleSaveField}
           onCancel={() => setEditingField(null)}
         />
