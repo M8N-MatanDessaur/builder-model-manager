@@ -241,6 +241,17 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
     }
   };
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(content, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${content.name}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Never';
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -316,13 +327,18 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
         <div>
           <h2 style={{ marginBottom: 0 }}>Content Data</h2>
         </div>
-        <button
-          className="primary"
-          onClick={onEdit}
-          style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
-        >
-          Edit Full JSON
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={handleExport}>
+            Export Content
+          </button>
+          <button
+            className="primary"
+            onClick={onEdit}
+            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
+          >
+            Edit Full JSON
+          </button>
+        </div>
       </div>
       <p className="text-secondary mb-md">
         Click ✎ to edit any field • Click parent rows to expand/collapse

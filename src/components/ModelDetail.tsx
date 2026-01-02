@@ -221,6 +221,17 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
     }
   };
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(model, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${model.name}-model-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       {saving && <LoadingSpinner message="Saving field..." fullscreen />}
@@ -276,13 +287,18 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
         <div>
           <h2 style={{ marginBottom: 0 }}>Fields</h2>
         </div>
-        <button
-          className="primary"
-          onClick={onEdit}
-          style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
-        >
-          Edit Full JSON
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={handleExport}>
+            Export Model
+          </button>
+          <button
+            className="primary"
+            onClick={onEdit}
+            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
+          >
+            Edit Full JSON
+          </button>
+        </div>
       </div>
       <p className="text-secondary mb-md">
         Click ✎ to edit any field • Click parent rows to expand/collapse
