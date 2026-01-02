@@ -287,14 +287,24 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
         </div>
 
       <div className="flex-between mb-lg">
-        <div>
-          <h1>
-            {content.name}
-            <span className="badge" style={{ marginLeft: 'var(--spacing-md)' }}>
-              {model.name}
-            </span>
-          </h1>
-          <span style={{ display: 'none' }} className="badge">{content.published || 'draft'}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '25px' }}>
+          <div>
+            <h1>
+              {content.name}
+              <span className="badge" style={{ marginLeft: 'var(--spacing-md)' }}>
+                {model.name}
+              </span>
+            </h1>
+            <span style={{ display: 'none' }} className="badge">{content.published || 'draft'}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', fontSize: '14px', color: '#999' }}>
+            <div>
+              <strong style={{ color: '#fff' }}>Created:</strong> {formatDate(content.createdDate)}
+            </div>
+            <div>
+              <strong style={{ color: '#fff' }}>Last Updated:</strong> {formatDate(content.lastUpdated)}
+            </div>
+          </div>
         </div>
         <button
           onClick={() => setShowDeleteConfirmation(true)}
@@ -304,7 +314,8 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
             color: '#ffffff',
             fontSize: '16px',
             padding: '8px 12px',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            display: 'none'
           }}
           title="Delete Content"
         >
@@ -314,15 +325,6 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
 
       {error && <div className="error">{error}</div>}
       {success && <div className="success">{success}</div>}
-
-      <div className="grid grid-3 mb-lg">
-        <div>
-          <strong>Created:</strong> {formatDate(content.createdDate)}
-        </div>
-        <div>
-          <strong>Last Updated:</strong> {formatDate(content.lastUpdated)}
-        </div>
-      </div>
 
       <div className="flex-between" style={{ alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
         <div>

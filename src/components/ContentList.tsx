@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Upload, Download, FileEdit, Eye } from 'lucide-react';
+import { Plus, Upload, Download, FileEdit, Eye, GitCompare } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 import { ConfirmationModal } from './ConfirmationModal';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ContentComparison } from './ContentComparison';
 
 interface ContentListProps {
   models: BuilderModel[];
@@ -29,6 +30,9 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
   const [deleting, setDeleting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [modelCounts, setModelCounts] = useState<Record<string, number>>({});
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set());
+  const [showComparison, setShowComparison] = useState(false);
 
   // Set initial selected model when models change
   useEffect(() => {
@@ -435,6 +439,56 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                  {/* Comparison Mode */}
+                  {!comparisonMode && (
+                    <button
+                      onClick={() => {
+                        setComparisonMode(true);
+                        setSelectedForComparison(new Set());
+                      }}
+                      title="Compare Content"
+                      disabled={content.length < 2}
+                      style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <GitCompare size={18} />
+                    </button>
+                  )}
+                  {comparisonMode && (
+                    <>
+                      <button
+                        onClick={() => {
+                          if (selectedForComparison.size === 2) {
+                            setShowComparison(true);
+                          }
+                        }}
+                        disabled={selectedForComparison.size !== 2}
+                        style={{
+                          padding: '8px 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          backgroundColor: selectedForComparison.size === 2 ? '#00aaff' : 'transparent',
+                          borderColor: selectedForComparison.size === 2 ? '#00aaff' : '#666',
+                          color: selectedForComparison.size === 2 ? '#000' : '#999',
+                        }}
+                        title="Compare Selected (2 required)"
+                      >
+                        <GitCompare size={18} />
+                        <span style={{ fontSize: '12px' }}>({selectedForComparison.size}/2)</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setComparisonMode(false);
+                          setSelectedForComparison(new Set());
+                        }}
+                        style={{ padding: '8px 12px' }}
+                        title="Cancel Comparison"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+
                   <input
                     type="file"
                     id="import-content"
@@ -483,29 +537,59 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
                   <table>
                     <thead>
                       <tr>
+                        {comparisonMode && <th style={{ width: '50px' }}>Select</th>}
                         <th>Name</th>
                         <th>Status</th>
                         <th>Last Updated</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredContent.map((item) => (
-                        <tr
-                          key={item.id}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => onViewContent(item, selectedModel)}
-                        >
-                          <td>{item.name}</td>
-                          <td>
-                            <span className="badge">
-                              {item.published || 'draft'}
-                            </span>
-                          </td>
-                          <td className="text-secondary">
-                            {formatDate(item.lastUpdated)}
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredContent.map((item) => {
+                        const isSelected = selectedForComparison.has(item.id || '');
+                        return (
+                          <tr
+                            key={item.id}
+                            style={{
+                              cursor: 'pointer',
+                              backgroundColor: isSelected ? '#00aaff22' : undefined,
+                            }}
+                            onClick={() => {
+                              if (comparisonMode && item.id) {
+                                const newSelection = new Set(selectedForComparison);
+                                if (newSelection.has(item.id)) {
+                                  newSelection.delete(item.id);
+                                } else if (newSelection.size < 2) {
+                                  newSelection.add(item.id);
+                                }
+                                setSelectedForComparison(newSelection);
+                              } else {
+                                onViewContent(item, selectedModel);
+                              }
+                            }}
+                          >
+                            {comparisonMode && (
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {}}
+                                  style={{ cursor: 'pointer' }}
+                                  disabled={!isSelected && selectedForComparison.size >= 2}
+                                />
+                              </td>
+                            )}
+                            <td>{item.name}</td>
+                            <td>
+                              <span className="badge">
+                                {item.published || 'draft'}
+                              </span>
+                            </td>
+                            <td className="text-secondary">
+                              {formatDate(item.lastUpdated)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
 
@@ -576,6 +660,29 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
           )}
         </div>
       </div>
+
+      {/* Comparison Modal */}
+      {showComparison && selectedModel && selectedForComparison.size === 2 && (() => {
+        const selectedIds = Array.from(selectedForComparison);
+        const leftContent = content.find(c => c.id === selectedIds[0]);
+        const rightContent = content.find(c => c.id === selectedIds[1]);
+
+        if (leftContent && rightContent) {
+          return (
+            <ContentComparison
+              leftContent={leftContent}
+              rightContent={rightContent}
+              model={selectedModel}
+              onClose={() => {
+                setShowComparison(false);
+                setComparisonMode(false);
+                setSelectedForComparison(new Set());
+              }}
+            />
+          );
+        }
+        return null;
+      })()}
     </>
   );
 }

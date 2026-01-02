@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Upload, Download } from 'lucide-react';
+import { Plus, Upload, Download, Network, List } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderModel } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 import { ConfirmationModal } from './ConfirmationModal';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ModelRelationshipTable } from './ModelRelationshipTable';
 
 interface ModelListProps {
   models: BuilderModel[];
@@ -15,6 +16,7 @@ interface ModelListProps {
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'kind' | 'fields' | 'updated';
+type ViewMode = 'table' | 'relationships';
 
 export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh }: ModelListProps) {
   const [error, setError] = useState('');
@@ -25,6 +27,7 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
   const [modelToDelete, setModelToDelete] = useState<BuilderModel | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   const handleDeleteConfirm = async () => {
     if (!modelToDelete?.id) return;
@@ -195,6 +198,37 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
         <div className="flex-between mb-lg">
           <h1>Content Models</h1>
           <div style={{ display: 'flex', gap: '8px' }}>
+            {/* View Mode Toggle */}
+            <button
+              onClick={() => setViewMode('table')}
+              title="Table View"
+              style={{
+                padding: '8px 12px',
+                backgroundColor: viewMode === 'table' ? '#00aaff' : 'transparent',
+                borderColor: viewMode === 'table' ? '#00aaff' : '#666',
+                color: viewMode === 'table' ? '#000' : '#999',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <List size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode('relationships')}
+              title="Relationships"
+              style={{
+                padding: '8px 12px',
+                backgroundColor: viewMode === 'relationships' ? '#00aaff' : 'transparent',
+                borderColor: viewMode === 'relationships' ? '#00aaff' : '#666',
+                color: viewMode === 'relationships' ? '#000' : '#999',
+                display: 'flex',
+                alignItems: 'center',
+                marginRight: '4px',
+              }}
+            >
+              <Network size={18} />
+            </button>
+
             <input
               type="file"
               id="import-models"
@@ -230,34 +264,37 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
 
       {error && <div className="error">{error}</div>}
 
-      <div className="search-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="Search models..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <label htmlFor="sort-models" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
-            Sort by:
-          </label>
-          <select
-            id="sort-models"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            style={{ minWidth: '160px' }}
-          >
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-            <option value="kind">Type</option>
-            <option value="fields">Fields Count</option>
-            <option value="updated">Last Updated</option>
-          </select>
-        </div>
-      </div>
+      {viewMode === 'relationships' ? (
+        <ModelRelationshipTable models={models} onSelectModel={onViewModel} />
+      ) : (
+        <>
+          <div className="search-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Search models..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="sort-models" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                Sort by:
+              </label>
+              <select
+                id="sort-models"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                style={{ minWidth: '160px' }}
+              >
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="kind">Type</option>
+                <option value="fields">Fields Count</option>
+              </select>
+            </div>
+          </div>
 
-      {totalCount === 0 ? (
+          {totalCount === 0 ? (
         <div className="card">
           <p className="text-secondary">
             {searchTerm
@@ -267,40 +304,60 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
         </div>
       ) : (
         <>
-          <table>
-            <thead>
-              <tr>
-                <th>Model Name</th>
-                <th>Type</th>
-                <th>Fields Count</th>
-                <th>Last Modified</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredModels.map((model) => (
-                <tr
-                  key={model.id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => onViewModel(model)}
-                >
-                  <td>
-                    <span title={`Unique identifier: ${model.name}`}>
-                      {getModelDisplayName(model)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="badge">{model.kind}</span>
-                  </td>
-                  <td>{model.fields.length}</td>
-                  <td className="text-small text-secondary">
-                    {model.lastUpdated
-                      ? new Date(model.lastUpdated).toLocaleDateString()
-                      : 'N/A'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '24px',
+            marginBottom: '24px'
+          }}>
+            {filteredModels.map((model) => (
+              <div
+                key={model.id}
+                onClick={() => onViewModel(model)}
+                style={{
+                  border: '1px solid #333',
+                  padding: '24px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: '#0a0a0a',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '32px',
+                  minHeight: '140px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#00aaff';
+                  e.currentTarget.style.backgroundColor = '#0f0f0f';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.backgroundColor = '#0a0a0a';
+                }}
+              >
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  lineHeight: '1.3',
+                  color: '#fff',
+                  wordBreak: 'break-word'
+                }} title={`Unique identifier: ${model.name}`}>
+                  {getModelDisplayName(model)}
+                </h3>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: 'auto'
+                }}>
+                  <span className="badge" style={{ fontSize: '12px' }}>{model.kind}</span>
+                  <span style={{ fontSize: '14px', color: '#999' }}>
+                    {model.fields.length} {model.fields.length === 1 ? 'field' : 'fields'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
@@ -363,6 +420,8 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
               </div>
             </div>
           )}
+        </>
+      )}
         </>
       )}
     </div>
