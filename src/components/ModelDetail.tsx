@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Upload, FileJson } from 'lucide-react';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 import { FieldEditor } from './FieldEditor';
@@ -287,16 +288,21 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
         <div>
           <h2 style={{ marginBottom: 0 }}>Fields</h2>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={handleExport}>
-            Export Model
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleExport}
+            title="Export Model"
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Upload size={18} />
           </button>
           <button
             className="primary"
             onClick={onEdit}
-            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
+            title="Edit Full JSON"
+            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            Edit Full JSON
+            <FileJson size={18} />
           </button>
         </div>
       </div>

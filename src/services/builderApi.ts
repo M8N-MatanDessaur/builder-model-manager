@@ -243,6 +243,7 @@ class BuilderApiService {
     const queryParams = new URLSearchParams({
       apiKey: credentials.publicKey,
       limit: String(params.limit || 100),
+      includeUnpublished: 'true', // Include draft content
       ...(params.offset && { offset: String(params.offset) }),
       ...(params.query && { query: JSON.stringify(params.query) }),
       ...(params.fields && { fields: params.fields }),
@@ -256,6 +257,7 @@ class BuilderApiService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${credentials.privateKey}`, // Use private key to access drafts
       },
     });
 
@@ -274,6 +276,7 @@ class BuilderApiService {
     const queryParams = new URLSearchParams({
       apiKey: credentials.publicKey,
       query: JSON.stringify({ id: contentId }),
+      includeUnpublished: 'true', // Include draft content
     });
 
     const url = `${CONTENT_API_ENDPOINT}/${modelName}?${queryParams}`;
@@ -282,6 +285,7 @@ class BuilderApiService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${credentials.privateKey}`, // Use private key to access drafts
       },
     });
 

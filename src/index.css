@@ -621,3 +621,39 @@ pre {
   border-top: 1px solid var(--border-color);
   padding-top: var(--spacing-md);
 }
+
+/* Custom Scrollbars - Brutalist Editorial Theme */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3a3a3a;
+  border-color: #444444;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #00aaff;
+  border-color: #00aaff;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--bg-primary);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) var(--bg-primary);
+}

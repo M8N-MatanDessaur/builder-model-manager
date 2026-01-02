@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Plus, Upload, Download } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderModel } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
@@ -193,7 +194,7 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
       <div className="container">
         <div className="flex-between mb-lg">
           <h1>Content Models</h1>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <input
               type="file"
               id="import-models"
@@ -201,14 +202,28 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
               onChange={handleImport}
               style={{ display: 'none' }}
             />
-            <button onClick={() => document.getElementById('import-models')?.click()}>
-              Import Models
+            <button
+              onClick={() => document.getElementById('import-models')?.click()}
+              title="Import Models"
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Download size={18} />
             </button>
-            <button onClick={handleExportAll} disabled={models.length === 0}>
-              Export All Models
+            <button
+              onClick={handleExportAll}
+              disabled={models.length === 0}
+              title="Export All Models"
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Upload size={18} />
             </button>
-            <button className="primary" onClick={onCreateNew}>
-              Create New Model
+            <button
+              className="primary"
+              onClick={onCreateNew}
+              title="Create New Model"
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={18} />
             </button>
           </div>
         </div>
@@ -326,7 +341,7 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  style={{ padding: '6px 12px' }}
+                  style={{ padding: '8px 12px' }}
                 >
                   Previous
                 </button>
@@ -341,7 +356,7 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  style={{ padding: '6px 12px' }}
+                  style={{ padding: '8px 12px' }}
                 >
                   Next
                 </button>

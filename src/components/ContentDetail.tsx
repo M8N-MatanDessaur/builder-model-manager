@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Upload, FileJson } from 'lucide-react';
 import type { BuilderContent, BuilderModel, BuilderField } from '../types/builder';
 import { ContentFieldEditor } from './ContentFieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -327,16 +328,21 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
         <div>
           <h2 style={{ marginBottom: 0 }}>Content Data</h2>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={handleExport}>
-            Export Content
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleExport}
+            title="Export Content"
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Upload size={18} />
           </button>
           <button
             className="primary"
             onClick={onEdit}
-            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold' }}
+            title="Edit Full JSON"
+            style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            Edit Full JSON
+            <FileJson size={18} />
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Plus, Upload, Download, FileEdit, Eye } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
@@ -20,11 +21,14 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('updated');
+  const [showDrafts, setShowDrafts] = useState(true);
+  const [showPublished, setShowPublished] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [contentToDelete, setContentToDelete] = useState<BuilderContent | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [modelCounts, setModelCounts] = useState<Record<string, number>>({});
 
   // Set initial selected model when models change
   useEffect(() => {
@@ -33,6 +37,33 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
       if (activeModels.length > 0) {
         setSelectedModel(activeModels[0]);
       }
+    }
+  }, [models]);
+
+  // Load content counts for all models
+  useEffect(() => {
+    const loadCounts = async () => {
+      const counts: Record<string, number> = {};
+      const activeModels = models.filter((m) => !m.archived);
+
+      // Fetch counts in parallel
+      await Promise.all(
+        activeModels.map(async (model) => {
+          try {
+            const content = await builderApi.getContent(model.name, { limit: 1000 });
+            // Only count non-archived items
+            counts[model.name] = content.filter((c) => c.published !== 'archived').length;
+          } catch {
+            counts[model.name] = 0;
+          }
+        })
+      );
+
+      setModelCounts(counts);
+    };
+
+    if (models.length > 0) {
+      loadCounts();
     }
   }, [models]);
 
@@ -164,12 +195,19 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
   };
 
   const { filteredContent, totalPages, totalCount } = useMemo(() => {
-    // Filter out archived content and apply search filter
-    const searched = content.filter(
-      (item) =>
-        item.published !== 'archived' &&
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter out archived content, apply status filter, and search filter
+    const searched = content.filter((item) => {
+      // Filter out archived
+      if (item.published === 'archived') return false;
+
+      // Apply draft/published filter
+      const status = item.published || 'draft';
+      if (status === 'draft' && !showDrafts) return false;
+      if (status === 'published' && !showPublished) return false;
+
+      // Apply search filter
+      return item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     // Apply sorting
     const sorted = [...searched].sort((a, b) => {
@@ -204,12 +242,16 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
       totalPages,
       totalCount,
     };
-  }, [content, searchTerm, sortBy, currentPage, pageSize]);
+  }, [content, searchTerm, sortBy, currentPage, pageSize, showDrafts, showPublished]);
 
-  // Reset to page 1 when search, sort, or model changes
+  // Reset to page 1 when search, sort, filter, or model changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sortBy, selectedModel]);
+  }, [searchTerm, sortBy, showDrafts, showPublished, selectedModel]);
+
+  const activeModels = useMemo(() => {
+    return models.filter((model) => !model.archived);
+  }, [models]);
 
   if (loading && models.length === 0) {
     return <LoadingSpinner message="Loading models..." fullscreen />;
@@ -241,185 +283,298 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
         />
       )}
 
-      <div className="container">
-        <h1>Content</h1>
-
-        {error && <div className="error">{error}</div>}
-
-      <div className="mb-lg">
-        <label htmlFor="model-select">Select Model:</label>
-        <select
-          id="model-select"
-          value={selectedModel?.name || ''}
-          onChange={(e) => {
-            const model = models.find((m) => m.name === e.target.value);
-            setSelectedModel(model || null);
-          }}
-          className="mb-md"
-        >
-          {models.map((model) => (
-            <option key={model.id} value={model.name} title={`Unique identifier: ${model.name}`}>
-              {getModelDisplayName(model)} ({model.kind})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedModel && (
-        <>
-          <div className="flex-between mb-lg">
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
-              <input
-                type="text"
-                placeholder="Search content..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ flex: 1, minWidth: '200px' }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label htmlFor="sort-content" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
-                  Sort by:
-                </label>
-                <select
-                  id="sort-content"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  style={{ minWidth: '160px' }}
-                >
-                  <option value="name-asc">Name (A-Z)</option>
-                  <option value="name-desc">Name (Z-A)</option>
-                  <option value="status">Status</option>
-                  <option value="created">Date Created</option>
-                  <option value="updated">Last Updated</option>
-                </select>
+      <div style={{ display: 'flex', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
+        {/* Sidebar */}
+        <div style={{
+          width: '280px',
+          borderRight: '2px solid #333',
+          overflowY: 'auto',
+          backgroundColor: '#0a0a0a',
+          padding: '20px',
+        }}>
+          <h2 style={{ marginBottom: '20px', fontSize: '18px', color: '#fff' }}>Models</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {activeModels.map((model) => (
+              <div
+                key={model.id}
+                onClick={() => setSelectedModel(model)}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: selectedModel?.id === model.id ? '#1a1a1a' : 'transparent',
+                  border: selectedModel?.id === model.id ? '1px solid #00aaff' : '1px solid #333',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedModel?.id !== model.id) {
+                    e.currentTarget.style.backgroundColor = '#151515';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedModel?.id !== model.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <div style={{
+                  fontWeight: selectedModel?.id === model.id ? 'bold' : 'normal',
+                  color: '#fff',
+                  marginBottom: '4px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>{getModelDisplayName(model)}</span>
+                  {modelCounts[model.name] !== undefined && (
+                    <span style={{
+                      backgroundColor: '#333',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      color: '#00aaff'
+                    }}>
+                      {modelCounts[model.name]}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  <span className="badge" style={{ fontSize: '11px', padding: '2px 6px' }}>{model.kind}</span>
+                  <span style={{ marginLeft: '8px' }}>{model.fields.length} fields</span>
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <input
-                type="file"
-                id="import-content"
-                accept=".json"
-                onChange={handleImport}
-                style={{ display: 'none' }}
-              />
-              <button onClick={() => document.getElementById('import-content')?.click()}>
-                Import Content
-              </button>
-              <button onClick={handleExportAll} disabled={content.length === 0}>
-                Export All Content
-              </button>
-              <button className="primary" onClick={() => onCreateNew(selectedModel)}>
-                Create New {selectedModel.name}
-              </button>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {loading ? (
-            <LoadingSpinner message="Loading content..." />
-          ) : totalCount === 0 ? (
-            <div className="card">
-              <p>
-                {searchTerm
-                  ? 'No content found matching your search.'
-                  : `No content entries found for ${selectedModel.name}. Create one to get started.`}
-              </p>
+        {/* Main Content Area */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 40px' }}>
+          {!selectedModel ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: '#999',
+              fontSize: '18px'
+            }}>
+              Select a model from the sidebar to manage content
             </div>
           ) : (
             <>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Last Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredContent.map((item) => (
-                    <tr
-                      key={item.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => onViewContent(item, selectedModel)}
-                    >
-                      <td>{item.name}</td>
-                      <td>
-                        <span className="badge">
-                          {item.published || 'draft'}
-                        </span>
-                      </td>
-                      <td className="text-secondary">
-                        {formatDate(item.lastUpdated)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {error && <div className="error">{error}</div>}
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '20px',
-                  padding: '12px',
-                  borderTop: '1px solid #333'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '14px', color: '#999' }}>
-                      Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <label htmlFor="content-page-size" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
-                        Per page:
-                      </label>
-                      <select
-                        id="content-page-size"
-                        value={pageSize}
-                        onChange={(e) => {
-                          setPageSize(Number(e.target.value));
-                          setCurrentPage(1);
-                        }}
-                        style={{ minWidth: '80px' }}
-                      >
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="200">200</option>
-                      </select>
-                    </div>
+              <div style={{ marginBottom: '24px' }}>
+                <h1 style={{ marginBottom: '8px' }}>
+                  {getModelDisplayName(selectedModel)}
+                  <span className="badge" style={{ marginLeft: '12px', fontSize: '14px' }}>
+                    {selectedModel.kind}
+                  </span>
+                </h1>
+                <p style={{ color: '#999', fontSize: '14px', margin: 0 }}>
+                  Manage content entries for this model
+                </p>
+              </div>
+
+              <div className="flex-between mb-lg">
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
+                  <input
+                    type="text"
+                    placeholder="Search content..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ flex: 1, minWidth: '200px' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label htmlFor="sort-content" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                      Sort by:
+                    </label>
+                    <select
+                      id="sort-content"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      style={{ minWidth: '160px' }}
+                    >
+                      <option value="name-asc">Name (A-Z)</option>
+                      <option value="name-desc">Name (Z-A)</option>
+                      <option value="status">Status</option>
+                      <option value="created">Date Created</option>
+                      <option value="updated">Last Updated</option>
+                    </select>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '1px solid #333', paddingLeft: '12px', marginRight: '4px' }}>
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      style={{ padding: '6px 12px' }}
+                      onClick={() => setShowDrafts(!showDrafts)}
+                      title="Show drafts"
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: showDrafts ? '#00aaff' : 'transparent',
+                        borderColor: showDrafts ? '#00aaff' : '#666',
+                        color: showDrafts ? '#000' : '#999',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
                     >
-                      Previous
+                      <FileEdit size={18} />
                     </button>
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '0 12px',
-                      fontSize: '14px'
-                    }}>
-                      Page {currentPage} of {totalPages}
-                    </span>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      style={{ padding: '6px 12px' }}
+                      onClick={() => setShowPublished(!showPublished)}
+                      title="Show published"
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: showPublished ? '#00ff88' : 'transparent',
+                        borderColor: showPublished ? '#00ff88' : '#666',
+                        color: showPublished ? '#000' : '#999',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
                     >
-                      Next
+                      <Eye size={18} />
                     </button>
                   </div>
                 </div>
+                <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                  <input
+                    type="file"
+                    id="import-content"
+                    accept=".json"
+                    onChange={handleImport}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    onClick={() => document.getElementById('import-content')?.click()}
+                    title="Import Content"
+                    style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Download size={18} />
+                  </button>
+                  <button
+                    onClick={handleExportAll}
+                    disabled={content.length === 0}
+                    title="Export All Content"
+                    style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Upload size={18} />
+                  </button>
+                  <button
+                    className="primary"
+                    onClick={() => onCreateNew(selectedModel)}
+                    title={`Create New ${selectedModel.name}`}
+                    style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <LoadingSpinner message="Loading content..." />
+              ) : totalCount === 0 ? (
+                <div className="card">
+                  <p>
+                    {searchTerm
+                      ? 'No content found matching your search.'
+                      : `No content entries found for ${selectedModel.name}. Create one to get started.`}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredContent.map((item) => (
+                        <tr
+                          key={item.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => onViewContent(item, selectedModel)}
+                        >
+                          <td>{item.name}</td>
+                          <td>
+                            <span className="badge">
+                              {item.published || 'draft'}
+                            </span>
+                          </td>
+                          <td className="text-secondary">
+                            {formatDate(item.lastUpdated)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '20px',
+                      padding: '12px',
+                      borderTop: '1px solid #333'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '14px', color: '#999' }}>
+                          Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <label htmlFor="content-page-size" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            Per page:
+                          </label>
+                          <select
+                            id="content-page-size"
+                            value={pageSize}
+                            onChange={(e) => {
+                              setPageSize(Number(e.target.value));
+                              setCurrentPage(1);
+                            }}
+                            style={{ minWidth: '80px' }}
+                          >
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          style={{ padding: '8px 12px' }}
+                        >
+                          Previous
+                        </button>
+                        <span style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '0 12px',
+                          fontSize: '14px'
+                        }}>
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          style={{ padding: '8px 12px' }}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
-        </>
-      )}
+        </div>
       </div>
     </>
   );

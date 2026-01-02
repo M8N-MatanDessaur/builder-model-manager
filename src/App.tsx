@@ -9,6 +9,7 @@ import { ContentList } from './components/ContentList';
 import { ContentDetail } from './components/ContentDetail';
 import { ContentJsonEditor } from './components/ContentJsonEditor';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { GlobalSearch } from './components/GlobalSearch';
 import type { BuilderModel, BuilderContent } from './types/builder';
 
 type Page = 'models' | 'content';
@@ -30,6 +31,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [models, setModels] = useState<BuilderModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Load models from API
   const loadModels = async () => {
@@ -112,6 +114,19 @@ function App() {
   useEffect(() => {
     localStorage.setItem('currentView', currentView);
   }, [currentView]);
+
+  // Global search keyboard shortcut (Ctrl/Cmd + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleAuthenticated = async () => {
     setIsAuthenticated(true);
@@ -212,6 +227,27 @@ function App() {
     }
   };
 
+  // Global search handlers
+  const handleSearchSelectModel = (model: BuilderModel) => {
+    setCurrentPage('models');
+    setSelectedModel(model);
+    setCurrentView('detail');
+    if (model.id) {
+      localStorage.setItem('selectedModelId', model.id);
+    }
+  };
+
+  const handleSearchSelectContent = (content: BuilderContent, model: BuilderModel) => {
+    setCurrentPage('content');
+    setSelectedContent(content);
+    setSelectedModel(model);
+    setCurrentView('detail');
+    if (content.id) {
+      localStorage.setItem('selectedContentId', content.id);
+      localStorage.setItem('selectedContentModelName', model.name);
+    }
+  };
+
   if (!isAuthenticated) {
     return <Auth onAuthenticated={handleAuthenticated} />;
   }
@@ -303,6 +339,15 @@ function App() {
           )}
         </>
       )}
+
+      {/* Global Search (Ctrl/Cmd + K) */}
+      <GlobalSearch
+        models={models}
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectModel={handleSearchSelectModel}
+        onSelectContent={handleSearchSelectContent}
+      />
     </>
   );
 }
