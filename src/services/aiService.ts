@@ -232,7 +232,7 @@ ${JSON.stringify(context.model.fields, null, 2)}
 
 `;
           if (context.allModels) {
-            const relationships = this.findRelationships(context.model, context.allModels);
+            const relationships = this.findRelationships(context.model);
             if (relationships.length > 0) {
               prompt += `\nRelationships:
 ${relationships.map(r => `- References ${r.to} via field "${r.field}"`).join('\n')}
@@ -269,7 +269,6 @@ ${JSON.stringify(context.content.data, null, 2)}
       case 'model':
         if (context.model) {
           const fieldNames = context.model.fields.map(f => f.name).sort();
-          const fieldTypes = context.model.fields.map(f => f.type).sort();
 
           const hasSlug = fieldNames.some(n => n.toLowerCase().includes('slug'));
           const hasDate = fieldNames.some(n => n.toLowerCase().includes('date') || n.toLowerCase().includes('published'));
@@ -313,12 +312,13 @@ Be consistent in your recommendations.`;
         break;
 
       case 'content':
-        if (context.content && context.model) {
-          const dataKeys = Object.keys(context.content.data).sort();
+        if (context.content && context.model && context.content.data) {
+          const content = context.content;
+          const dataKeys = Object.keys(content.data).sort();
           const modelFieldNames = context.model.fields.map(f => f.name).sort();
           const missingFields = modelFieldNames.filter(f => !dataKeys.includes(f));
           const emptyFields = dataKeys.filter(k => {
-            const val = context.content.data[k];
+            const val = content.data[k];
             return val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0);
           });
 
@@ -344,7 +344,7 @@ Be specific and consistent. Same data state = same suggestions.`;
     return 'Provide a helpful insight about the current context.';
   }
 
-  private findRelationships(model: BuilderModel, allModels: BuilderModel[]): Array<{ field: string; to: string }> {
+  private findRelationships(model: BuilderModel): Array<{ field: string; to: string }> {
     const relationships: Array<{ field: string; to: string }> = [];
 
     const extractRefs = (fields: BuilderField[], path = ''): void => {

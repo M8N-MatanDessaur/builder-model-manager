@@ -18,7 +18,7 @@ interface DiffResult {
   type: DiffType;
 }
 
-export function ContentComparison({ leftContent, rightContent, model, onClose }: ContentComparisonProps) {
+export function ContentComparison({ leftContent, rightContent, onClose }: ContentComparisonProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
 
   const togglePath = (path: string) => {

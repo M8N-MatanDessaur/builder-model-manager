@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import type { BuilderModel } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 
@@ -283,7 +283,7 @@ export function ModelRelationshipGraph({ models, onSelectModel }: ModelRelations
               edgeGroups[key].push(edge);
             });
 
-            return Object.entries(edgeGroups).map(([key, groupEdges], groupIndex) => {
+            return Object.entries(edgeGroups).map(([, groupEdges], groupIndex) => {
               const edge = groupEdges[0]; // Use first edge for positioning
               const fromNode = nodes.find(n => n.id === edge.from);
               const toNode = nodes.find(n => n.id === edge.to);

@@ -562,7 +562,7 @@ export function AIFieldTooltip({ fieldName, fieldType, fieldModel }: AIFieldTool
   const [insight, setInsight] = useState<string>('');
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<number | null>(null);
 
   const handleMouseEnter = () => {
     // Load insight after hovering for 1.5 seconds

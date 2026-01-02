@@ -10,8 +10,8 @@ export default defineConfig({
         target: 'https://api.openai.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/openai/, ''),
-        configure: (proxy, options) => {
-          proxy.on('proxyReq', (proxyReq, req, res) => {
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
             // Get the API key from the request header
             const apiKey = req.headers['x-openai-api-key'];
             if (apiKey) {
