@@ -25,14 +25,14 @@ class BuilderApiService {
 
   setCredentials(credentials: BuilderCredentials) {
     this.credentials = credentials;
-    // Store in sessionStorage
-    sessionStorage.setItem('builder_credentials', JSON.stringify(credentials));
+    // Store in localStorage
+    localStorage.setItem('builder_credentials', JSON.stringify(credentials));
   }
 
   loadCredentials(): BuilderCredentials | null {
     if (this.credentials) return this.credentials;
 
-    const stored = sessionStorage.getItem('builder_credentials');
+    const stored = localStorage.getItem('builder_credentials');
     if (stored) {
       this.credentials = JSON.parse(stored);
       return this.credentials;
@@ -42,7 +42,7 @@ class BuilderApiService {
 
   clearCredentials() {
     this.credentials = null;
-    sessionStorage.removeItem('builder_credentials');
+    localStorage.removeItem('builder_credentials');
   }
 
   isAuthenticated(): boolean {

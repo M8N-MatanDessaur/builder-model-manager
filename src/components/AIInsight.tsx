@@ -25,7 +25,7 @@ export function AIInsight({ context, position = 'inline', compact = false }: AII
 
   // Check if API key exists and auto-load insight on mount
   useEffect(() => {
-    const stored = sessionStorage.getItem('builder_credentials');
+    const stored = localStorage.getItem('builder_credentials');
     if (stored) {
       const credentials = JSON.parse(stored);
       const hasKey = !!credentials.openaiApiKey;
@@ -43,7 +43,7 @@ export function AIInsight({ context, position = 'inline', compact = false }: AII
   useEffect(() => {
     const handleSettingsUpdate = () => {
       console.log('[AIInsight] Settings updated, checking for API key...');
-      const stored = sessionStorage.getItem('builder_credentials');
+      const stored = localStorage.getItem('builder_credentials');
       if (stored) {
         const credentials = JSON.parse(stored);
         const hasKey = !!credentials.openaiApiKey;

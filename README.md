@@ -83,7 +83,7 @@ interface BuilderCredentials {
 }
 
 // Store credentials
-sessionStorage.setItem('builder_credentials', JSON.stringify(credentials));
+localStorage.setItem('builder_credentials', JSON.stringify(credentials));
 
 // Test connection
 const query = `query { me { id email } }`;
@@ -456,7 +456,7 @@ State flows down via props, events flow up via callbacks. No Redux/MobX - plain 
 
 ## Security Considerations
 
-1. **API Keys**: sessionStorage for web, use Keychain/Keystore for native
+1. **API Keys**: localStorage for web (persists across sessions), use Keychain/Keystore for native
 2. **No logging**: Never log API keys
 3. **HTTPS only**: All API calls use HTTPS
 4. **Input validation**: Validate before API submission

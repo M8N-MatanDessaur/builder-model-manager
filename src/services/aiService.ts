@@ -6,7 +6,7 @@ const OPENAI_API_URL = import.meta.env.DEV
   : 'https://api.openai.com/v1/chat/completions';
 
 function getOpenAIApiKey(): string | null {
-  const stored = sessionStorage.getItem('builder_credentials');
+  const stored = localStorage.getItem('builder_credentials');
   console.log('[aiService] Checking for OpenAI API key...');
   if (stored) {
     const credentials: BuilderCredentials = JSON.parse(stored);
@@ -17,7 +17,7 @@ function getOpenAIApiKey(): string | null {
     }
     return hasKey ? credentials.openaiApiKey! : null;
   }
-  console.log('[aiService] No credentials found in sessionStorage');
+  console.log('[aiService] No credentials found in localStorage');
   return null;
 }
 
