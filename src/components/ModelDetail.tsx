@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil } from 'lucide-react';
+import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
 import { FieldEditor } from './FieldEditor';
@@ -13,6 +13,7 @@ interface ModelDetailProps {
   onEdit: () => void;
   onBack: () => void;
   onUpdate: () => void;
+  onViewContentEntries?: () => void;
 }
 
 interface FieldRowProps {
@@ -148,7 +149,7 @@ function FieldRow({ field, depth = 0, path, onEditField }: FieldRowProps) {
   );
 }
 
-export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProps) {
+export function ModelDetail({ model, onEdit, onBack, onUpdate, onViewContentEntries }: ModelDetailProps) {
   const [editingField, setEditingField] = useState<{ field: BuilderField; path: string[] } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -330,6 +331,16 @@ export function ModelDetail({ model, onEdit, onBack, onUpdate }: ModelDetailProp
           <h2 style={{ marginBottom: 0 }}>Fields</h2>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          {onViewContentEntries && (
+            <button
+              onClick={onViewContentEntries}
+              title="View Content Entries"
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#2d7a3e', borderColor: '#2d7a3e', color: '#ffffff' }}
+            >
+              <FileText size={18} />
+              <span>View Content</span>
+            </button>
+          )}
           <button
             onClick={handleExport}
             title="Export Model"

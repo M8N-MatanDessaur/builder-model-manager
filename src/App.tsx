@@ -32,6 +32,7 @@ function App() {
   const [models, setModels] = useState<BuilderModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [contentListInitialModel, setContentListInitialModel] = useState<BuilderModel | null>(null);
 
   // Load models from API
   const loadModels = async () => {
@@ -158,6 +159,7 @@ function App() {
     setCurrentView('list');
     setSelectedModel(null);
     setSelectedContent(null);
+    setContentListInitialModel(null);
     localStorage.removeItem('selectedModelId');
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
@@ -209,7 +211,34 @@ function App() {
     setCurrentView('list');
     setSelectedModel(null);
     setSelectedContent(null);
+    setContentListInitialModel(null);
     localStorage.removeItem('selectedModelId');
+    localStorage.removeItem('selectedContentId');
+    localStorage.removeItem('selectedContentModelName');
+  };
+
+  // Navigate from ModelDetail to ContentList with that model pre-selected
+  const handleViewModelContentEntries = (model: BuilderModel) => {
+    setCurrentPage('content');
+    setCurrentView('list');
+    setContentListInitialModel(model);
+    setSelectedModel(null);
+    setSelectedContent(null);
+    localStorage.removeItem('selectedModelId');
+    localStorage.removeItem('selectedContentId');
+    localStorage.removeItem('selectedContentModelName');
+  };
+
+  // Navigate from ContentDetail to ModelDetail
+  const handleContentViewModel = async (model: BuilderModel) => {
+    setCurrentPage('models');
+    setCurrentView('detail');
+    setSelectedModel(model);
+    setSelectedContent(null);
+    setContentListInitialModel(null);
+    if (model.id) {
+      localStorage.setItem('selectedModelId', model.id);
+    }
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
   };
@@ -218,6 +247,7 @@ function App() {
     setCurrentView('list');
     setSelectedModel(null);
     setSelectedContent(null);
+    setContentListInitialModel(null);
     localStorage.removeItem('selectedModelId');
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
@@ -297,6 +327,7 @@ function App() {
                   setSelectedModel(updated);
                 }
               }}
+              onViewContentEntries={() => handleViewModelContentEntries(selectedModel)}
             />
           )}
 
@@ -317,6 +348,7 @@ function App() {
               models={models}
               onViewContent={handleViewContent}
               onCreateNew={handleCreateNewContent}
+              initialSelectedModel={contentListInitialModel || undefined}
             />
           )}
 
@@ -335,6 +367,7 @@ function App() {
                   }
                 }
               }}
+              onViewModel={() => handleContentViewModel(selectedModel)}
             />
           )}
 
