@@ -14,6 +14,20 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  // Clean the URL by removing surrounding quotes (single or double)
+  const cleanUrl = (rawUrl: string): string => {
+    if (!rawUrl) return rawUrl;
+    const trimmed = rawUrl.trim();
+    // Remove surrounding quotes if present
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed.slice(1, -1);
+    }
+    return trimmed;
+  };
+
+  const cleanedUrl = cleanUrl(url);
+
   const getMediaType = (url: string): 'image' | 'video' | 'audio' | 'unknown' => {
     const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i;
     const videoExtensions = /\.(mp4|webm|ogg|mov|avi|wmv)$/i;
@@ -25,7 +39,7 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
     return 'unknown';
   };
 
-  const mediaType = getMediaType(url);
+  const mediaType = getMediaType(cleanedUrl);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -58,12 +72,12 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
         </button>
 
         {mediaType === 'image' && (
-          <img src={url} alt="Preview" className="media-preview-image" />
+          <img src={cleanedUrl} alt="Preview" className="media-preview-image" />
         )}
 
         {mediaType === 'video' && (
           <video controls className="media-preview-video">
-            <source src={url} />
+            <source src={cleanedUrl} />
             Your browser does not support the video tag.
           </video>
         )}
@@ -71,20 +85,20 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
         {mediaType === 'audio' && (
           <div className="media-preview-audio-container">
             <audio controls className="media-preview-audio">
-              <source src={url} />
+              <source src={cleanedUrl} />
               Your browser does not support the audio tag.
             </audio>
-            <p className="media-preview-url">{url}</p>
+            <p className="media-preview-url">{cleanedUrl}</p>
           </div>
         )}
 
         {mediaType === 'unknown' && (
           <div className="media-preview-unknown">
             <p>Unable to preview this file type</p>
-            <a href={url} target="_blank" rel="noopener noreferrer" className="media-preview-link">
+            <a href={cleanedUrl} target="_blank" rel="noopener noreferrer" className="media-preview-link">
               Open in new tab
             </a>
-            <p className="media-preview-url">{url}</p>
+            <p className="media-preview-url">{cleanedUrl}</p>
           </div>
         )}
       </div>
