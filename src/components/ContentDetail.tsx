@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
+import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText, Eye } from 'lucide-react';
 import type { BuilderContent, BuilderModel, BuilderField } from '../types/builder';
 import { ContentFieldEditor } from './ContentFieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
+import { MediaPreviewModal } from './MediaPreviewModal';
 import { builderApi } from '../services/builderApi';
 import { LoadingSpinner } from './LoadingSpinner';
 import { AIInsight } from './AIInsight';
@@ -27,10 +28,21 @@ interface DataRowProps {
 
 function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField }: DataRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const indent = depth * 24;
   const hasChildren = fieldValue !== null && typeof fieldValue === 'object' && !Array.isArray(fieldValue);
   const isArray = Array.isArray(fieldValue);
   const currentPath = [...path, fieldName];
+
+  // Check if value is a previewable media URL
+  const isMediaUrl = (value: any): boolean => {
+    if (typeof value !== 'string') return false;
+    const mediaPattern = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|tiff|avif|mp4|webm|ogg|mov|avi|wmv|mkv|m4v|mp3|wav|m4a|aac|flac|wma)(\?|#|$)/i;
+    const builderImageApi = /cdn\.builder\.io\/api\/v1\/image/i;
+    return mediaPattern.test(value) || builderImageApi.test(value);
+  };
+
+  const canPreview = isMediaUrl(fieldValue);
 
   // Calculate background color based on nesting depth
   const getDepthBackground = (depth: number, isExpanded: boolean): string => {
@@ -106,6 +118,18 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
             </span>
           )}
           {fieldName}
+          {canPreview && (
+            <button
+              className="edit-icon-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPreview(true);
+              }}
+              title="Preview media"
+            >
+              <Eye size={14} />
+            </button>
+          )}
           <button
             className="edit-icon-button"
             onClick={handleEditClick}
@@ -174,6 +198,14 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
             ))
           )}
         </div>
+      )}
+
+      {canPreview && (
+        <MediaPreviewModal
+          url={fieldValue}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+        />
       )}
     </div>
   );

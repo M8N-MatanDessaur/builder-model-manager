@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import '../styles/MediaPreviewModal.css';
 
 interface MediaPreviewModalProps {
@@ -29,11 +30,15 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
   const cleanedUrl = cleanUrl(url);
 
   const getMediaType = (url: string): 'image' | 'video' | 'audio' | 'unknown' => {
-    const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i;
-    const videoExtensions = /\.(mp4|webm|ogg|mov|avi|wmv)$/i;
-    const audioExtensions = /\.(mp3|wav|ogg|m4a|aac)$/i;
+    // Match extensions at end of URL or before query params (?), hash (#), or path (/)
+    const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|tiff|avif)(\?|#|$)/i;
+    const videoExtensions = /\.(mp4|webm|ogg|mov|avi|wmv|mkv|m4v)(\?|#|$)/i;
+    const audioExtensions = /\.(mp3|wav|ogg|m4a|aac|flac|wma)(\?|#|$)/i;
 
-    if (imageExtensions.test(url)) return 'image';
+    // Also check for Builder.io image API URLs which may not have extensions
+    const builderImageApi = /cdn\.builder\.io\/api\/v1\/image/i;
+
+    if (imageExtensions.test(url) || builderImageApi.test(url)) return 'image';
     if (videoExtensions.test(url)) return 'video';
     if (audioExtensions.test(url)) return 'audio';
     return 'unknown';
@@ -68,7 +73,7 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
     <div className="media-preview-modal" onClick={handleBackdropClick}>
       <div className="media-preview-content">
         <button className="media-preview-close" onClick={onClose}>
-          &times;
+          <X size={18} />
         </button>
 
         {mediaType === 'image' && (

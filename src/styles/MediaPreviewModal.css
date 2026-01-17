@@ -9,16 +9,6 @@
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .media-preview-content {
@@ -32,25 +22,24 @@
 
 .media-preview-close {
   position: absolute;
-  top: -40px;
+  top: -36px;
   right: 0;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 40px;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
   cursor: pointer;
   padding: 0;
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
   z-index: 10001;
 }
 
 .media-preview-close:hover {
-  transform: scale(1.2);
+  background: #444;
+  border-color: #777;
 }
 
 .media-preview-image {
