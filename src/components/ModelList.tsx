@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Upload, Download, Network, List, FileJson, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
+import { Plus, Upload, Download, Network, List, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';

@@ -238,7 +238,7 @@ function App() {
   };
 
   // Navigate from ContentDetail to ModelList (split-panel view)
-  const handleContentViewModel = async (model: BuilderModel) => {
+  const handleContentViewModel = async (_model: BuilderModel) => {
     // Use flushSync to ensure state updates happen immediately and synchronously
     flushSync(() => {
       setSelectedModel(null);
