@@ -629,7 +629,6 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('View Content clicked, model:', selectedModel.name);
                       onViewContentEntries(selectedModel);
                     }}
                     title="View Content Entries"
