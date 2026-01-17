@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { builderApi } from './services/builderApi';
 import { Auth } from './components/Auth';
 import { Header } from './components/Header';
@@ -217,13 +218,20 @@ function App() {
     localStorage.removeItem('selectedContentModelName');
   };
 
-  // Navigate from ModelDetail to ContentList with that model pre-selected
+  // Navigate from ModelList/ModelDetail to ContentList with that model pre-selected
   const handleViewModelContentEntries = (model: BuilderModel) => {
-    setCurrentPage('content');
-    setCurrentView('list');
-    setContentListInitialModel(model);
-    setSelectedModel(null);
-    setSelectedContent(null);
+    // Use flushSync to ensure state updates happen immediately and synchronously
+    flushSync(() => {
+      setSelectedModel(null);
+      setSelectedContent(null);
+      setCurrentView('list');
+    });
+
+    flushSync(() => {
+      setCurrentPage('content');
+      setContentListInitialModel(model);
+    });
+
     localStorage.removeItem('selectedModelId');
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
@@ -231,11 +239,18 @@ function App() {
 
   // Navigate from ContentDetail to ModelList (split-panel view)
   const handleContentViewModel = async (model: BuilderModel) => {
-    setCurrentPage('models');
-    setCurrentView('list');
-    setSelectedModel(null);
-    setSelectedContent(null);
-    setContentListInitialModel(null);
+    // Use flushSync to ensure state updates happen immediately and synchronously
+    flushSync(() => {
+      setSelectedModel(null);
+      setSelectedContent(null);
+      setContentListInitialModel(null);
+      setCurrentView('list');
+    });
+
+    flushSync(() => {
+      setCurrentPage('models');
+    });
+
     localStorage.removeItem('selectedModelId');
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
