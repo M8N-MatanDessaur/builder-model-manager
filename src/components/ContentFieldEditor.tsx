@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ConfirmationModal } from './ConfirmationModal';
+import { MediaPreviewModal } from './MediaPreviewModal';
 import type { FieldType } from '../types/builder';
 
 interface ContentFieldEditorProps {
@@ -16,6 +17,7 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
   const [error, setError] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [parsedValue, setParsedValue] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
 
@@ -25,6 +27,16 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
   const useTextEditor = ['string', 'text', 'email', 'url'].includes(fieldType || '');
   const useNumberEditor = fieldType === 'number';
   const useBooleanEditor = fieldType === 'boolean';
+  const isFileField = fieldType === 'file';
+
+  // Helper function to check if value is a media URL
+  const isMediaUrl = (val: any): boolean => {
+    if (typeof val !== 'string') return false;
+    const mediaExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg|mp4|webm|ogg|mov|avi|wmv|mp3|wav|m4a|aac)$/i;
+    return mediaExtensions.test(val) || val.startsWith('http://') || val.startsWith('https://');
+  };
+
+  const canPreview = isFileField && isMediaUrl(value);
 
   useEffect(() => {
     if (useJsonEditor) {
@@ -257,9 +269,36 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
         />
       )}
 
+      {canPreview && (
+        <MediaPreviewModal
+          url={value}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
+
       <div className="modal-overlay">
         <div className="modal-content">
-          <h2>Edit Field: {fieldName}</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
+            <h2 style={{ margin: 0 }}>Edit Field: {fieldName}</h2>
+            {canPreview && (
+              <button
+                onClick={() => setShowPreview(true)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--accent-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+              >
+                Preview
+              </button>
+            )}
+          </div>
           <p className="text-secondary text-small mb-md">
             Path: {fullPath}
             {fieldType && (
