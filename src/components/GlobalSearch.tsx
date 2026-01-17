@@ -49,11 +49,11 @@ export function GlobalSearch({
       const results: Array<{ content: BuilderContent; model: BuilderModel }> = [];
 
       try {
-        // Search in parallel across all active models
+        // Search in parallel across all active models, fetching all entries
         const activeModels = models.filter((m) => !m.archived);
         const searches = activeModels.map(async (model) => {
           try {
-            const content = await builderApi.getContent(model.name, { limit: 100 });
+            const content = await builderApi.getAllContent(model.name);
             const term = searchTerm.toLowerCase();
 
             // Filter content by name or data values

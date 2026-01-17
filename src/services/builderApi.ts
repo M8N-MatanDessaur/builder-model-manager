@@ -269,6 +269,38 @@ class BuilderApiService {
     return data.results || [];
   }
 
+  async getAllContent(
+    modelName: string,
+    params: Omit<ContentQueryParams, 'limit' | 'offset'> = {}
+  ): Promise<BuilderContent[]> {
+    const credentials = this.loadCredentials();
+    if (!credentials) throw new Error('Not authenticated');
+
+    const allContent: BuilderContent[] = [];
+    const batchSize = 100;
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const batch = await this.getContent(modelName, {
+        ...params,
+        limit: batchSize,
+        offset,
+      });
+
+      allContent.push(...batch);
+
+      // If we got fewer results than the batch size, we've reached the end
+      if (batch.length < batchSize) {
+        hasMore = false;
+      } else {
+        offset += batchSize;
+      }
+    }
+
+    return allContent;
+  }
+
   async getContentById(modelName: string, contentId: string): Promise<BuilderContent | null> {
     const credentials = this.loadCredentials();
     if (!credentials) throw new Error('Not authenticated');
