@@ -11,12 +11,13 @@ interface ContentListProps {
   models: BuilderModel[];
   onViewContent: (content: BuilderContent, model: BuilderModel) => void;
   onCreateNew: (model: BuilderModel) => void;
+  initialSelectedModel?: BuilderModel;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'status' | 'created' | 'updated';
 
-export function ContentList({ models, onViewContent, onCreateNew }: ContentListProps) {
-  const [selectedModel, setSelectedModel] = useState<BuilderModel | null>(null);
+export function ContentList({ models, onViewContent, onCreateNew, initialSelectedModel }: ContentListProps) {
+  const [selectedModel, setSelectedModel] = useState<BuilderModel | null>(initialSelectedModel || null);
   const [content, setContent] = useState<BuilderContent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

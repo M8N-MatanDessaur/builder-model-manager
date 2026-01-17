@@ -13,6 +13,7 @@ interface ContentDetailProps {
   onEdit: () => void;
   onBack: () => void;
   onUpdate: () => void;
+  onViewModel?: () => void;
 }
 
 interface DataRowProps {
@@ -162,7 +163,7 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
   );
 }
 
-export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: ContentDetailProps) {
+export function ContentDetail({ content, model, onEdit, onBack, onUpdate, onViewModel }: ContentDetailProps) {
   const [editingField, setEditingField] = useState<{ path: string[]; value: any; fieldDef?: BuilderField } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -301,7 +302,24 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
           <div>
             <h1>
               {content.name}
-              <span className="badge" style={{ marginLeft: 'var(--spacing-md)' }}>
+              <span
+                className="badge"
+                style={{
+                  marginLeft: 'var(--spacing-md)',
+                  cursor: onViewModel ? 'pointer' : 'default',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onClick={onViewModel}
+                onMouseEnter={(e) => {
+                  if (onViewModel) {
+                    e.currentTarget.style.backgroundColor = '#3a3a3a';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
+                title={onViewModel ? `View ${model.name} model` : undefined}
+              >
                 {model.name}
               </span>
             </h1>
