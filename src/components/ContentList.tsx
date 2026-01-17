@@ -50,11 +50,11 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
       const counts: Record<string, number> = {};
       const activeModels = models.filter((m) => !m.archived);
 
-      // Fetch counts in parallel
+      // Fetch counts in parallel using pagination to get all entries
       await Promise.all(
         activeModels.map(async (model) => {
           try {
-            const content = await builderApi.getContent(model.name, { limit: 1000 });
+            const content = await builderApi.getAllContent(model.name);
             // Only count non-archived items
             counts[model.name] = content.filter((c) => c.published !== 'archived').length;
           } catch {
@@ -83,9 +83,8 @@ export function ContentList({ models, onViewContent, onCreateNew }: ContentListP
     setLoading(true);
     setError('');
     try {
-      const contentData = await builderApi.getContent(selectedModel.name, {
-        limit: 100,
-      });
+      // Fetch all content entries using pagination
+      const contentData = await builderApi.getAllContent(selectedModel.name);
       setContent(contentData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load content');
