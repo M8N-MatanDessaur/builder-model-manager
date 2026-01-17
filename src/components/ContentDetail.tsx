@@ -371,19 +371,34 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate }: Cont
         Click <Pencil size={14} style={{ display: 'inline' }} /> to edit any field • Click parent rows to expand/collapse
       </p>
       <div className="field-list mb-lg">
-        {Object.entries(content.data).map(([key, value]) => {
-          const fieldDef = model.fields.find(f => f.name === key);
+        {/* Render fields in the order defined by the model */}
+        {model.fields.map((fieldDef) => {
+          const key = fieldDef.name;
+          if (!(key in content.data)) return null; // Skip if field not present in content
           return (
             <DataRow
               key={key}
               fieldName={key}
-              fieldValue={value}
+              fieldValue={content.data[key]}
               fieldDef={fieldDef}
               path={[]}
               onEditField={handleEditField}
             />
           );
         })}
+        {/* Render any extra fields not defined in the model */}
+        {Object.entries(content.data)
+          .filter(([key]) => !model.fields.some(f => f.name === key))
+          .map(([key, value]) => (
+            <DataRow
+              key={key}
+              fieldName={key}
+              fieldValue={value}
+              fieldDef={undefined}
+              path={[]}
+              onEditField={handleEditField}
+            />
+          ))}
       </div>
 
       {editingField && !saving && (
