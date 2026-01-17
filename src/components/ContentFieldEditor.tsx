@@ -36,7 +36,16 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
     return mediaExtensions.test(val) || val.startsWith('http://') || val.startsWith('https://');
   };
 
-  const canPreview = isFileField && isMediaUrl(value);
+  // Helper function to check if field name/path suggests it's a media field
+  const isMediaField = (): boolean => {
+    const fieldName = path[path.length - 1]?.toLowerCase() || '';
+    const fullPath = path.join('.').toLowerCase();
+    const mediaKeywords = ['image', 'video', 'media', 'photo', 'picture', 'thumbnail', 'avatar', 'banner', 'background'];
+    return mediaKeywords.some(keyword => fieldName.includes(keyword) || fullPath.includes(keyword));
+  };
+
+  // Show preview if: it's a file field, OR the value looks like media, OR the field name suggests it's media
+  const canPreview = (isFileField || isMediaField() || isMediaUrl(value)) && isMediaUrl(value);
 
   useEffect(() => {
     if (useJsonEditor) {
