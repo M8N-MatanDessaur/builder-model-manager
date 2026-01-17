@@ -20,11 +20,11 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [spaceName, setSpaceName] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<Page>(() => {
-    const saved = localStorage.getItem('currentPage');
+    const saved = sessionStorage.getItem('currentPage');
     return (saved === 'models' || saved === 'content') ? saved : 'models';
   });
   const [currentView, setCurrentView] = useState<View>(() => {
-    const saved = localStorage.getItem('currentView');
+    const saved = sessionStorage.getItem('currentView');
     return (saved === 'list' || saved === 'detail' || saved === 'edit' || saved === 'create') ? saved : 'list';
   });
   const [selectedModel, setSelectedModel] = useState<BuilderModel | null>(null);
@@ -72,7 +72,7 @@ function App() {
       setLoading(true);
       try {
         if (currentPage === 'models') {
-          const modelId = localStorage.getItem('selectedModelId');
+          const modelId = sessionStorage.getItem('selectedModelId');
           if (modelId) {
             const model = await builderApi.getModel(modelId);
             setSelectedModel(model);
@@ -81,8 +81,8 @@ function App() {
             setCurrentView('list');
           }
         } else if (currentPage === 'content') {
-          const contentId = localStorage.getItem('selectedContentId');
-          const modelName = localStorage.getItem('selectedContentModelName');
+          const contentId = sessionStorage.getItem('selectedContentId');
+          const modelName = sessionStorage.getItem('selectedContentModelName');
           if (contentId && modelName) {
             const content = await builderApi.getContentById(modelName, contentId);
             const models = await builderApi.getModels();
@@ -108,13 +108,13 @@ function App() {
     restoreState();
   }, [isAuthenticated]);
 
-  // Persist page state
+  // Persist page state (sessionStorage = per-tab, cleared on new tab/window)
   useEffect(() => {
-    localStorage.setItem('currentPage', currentPage);
+    sessionStorage.setItem('currentPage', currentPage);
   }, [currentPage]);
 
   useEffect(() => {
-    localStorage.setItem('currentView', currentView);
+    sessionStorage.setItem('currentView', currentView);
   }, [currentView]);
 
   // Global search keyboard shortcut (Ctrl/Cmd + K)
@@ -145,8 +145,11 @@ function App() {
 
   const handleDisconnect = () => {
     builderApi.clearCredentials();
-    localStorage.removeItem('currentPage');
-    localStorage.removeItem('currentView');
+    sessionStorage.removeItem('currentPage');
+    sessionStorage.removeItem('currentView');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
     setIsAuthenticated(false);
     setSpaceName('');
     setCurrentPage('models');
@@ -161,9 +164,9 @@ function App() {
     setSelectedModel(null);
     setSelectedContent(null);
     setContentListInitialModel(null);
-    localStorage.removeItem('selectedModelId');
-    localStorage.removeItem('selectedContentId');
-    localStorage.removeItem('selectedContentModelName');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
   };
 
   // Model handlers
@@ -171,7 +174,7 @@ function App() {
     setSelectedModel(model);
     setCurrentView('detail');
     if (model.id) {
-      localStorage.setItem('selectedModelId', model.id);
+      sessionStorage.setItem('selectedModelId', model.id);
     }
   };
 
@@ -191,8 +194,8 @@ function App() {
     setSelectedModel(model);
     setCurrentView('detail');
     if (content.id) {
-      localStorage.setItem('selectedContentId', content.id);
-      localStorage.setItem('selectedContentModelName', model.name);
+      sessionStorage.setItem('selectedContentId', content.id);
+      sessionStorage.setItem('selectedContentModelName', model.name);
     }
   };
 
@@ -213,9 +216,9 @@ function App() {
     setSelectedModel(null);
     setSelectedContent(null);
     setContentListInitialModel(null);
-    localStorage.removeItem('selectedModelId');
-    localStorage.removeItem('selectedContentId');
-    localStorage.removeItem('selectedContentModelName');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
   };
 
   // Navigate from ModelList/ModelDetail to ContentList with that model pre-selected
@@ -232,9 +235,9 @@ function App() {
       setContentListInitialModel(model);
     });
 
-    localStorage.removeItem('selectedModelId');
-    localStorage.removeItem('selectedContentId');
-    localStorage.removeItem('selectedContentModelName');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
   };
 
   // Navigate from ContentDetail to ModelList (split-panel view)
@@ -251,9 +254,9 @@ function App() {
       setCurrentPage('models');
     });
 
-    localStorage.removeItem('selectedModelId');
-    localStorage.removeItem('selectedContentId');
-    localStorage.removeItem('selectedContentModelName');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
   };
 
   const handleSaveSuccess = () => {
@@ -261,9 +264,9 @@ function App() {
     setSelectedModel(null);
     setSelectedContent(null);
     setContentListInitialModel(null);
-    localStorage.removeItem('selectedModelId');
-    localStorage.removeItem('selectedContentId');
-    localStorage.removeItem('selectedContentModelName');
+    sessionStorage.removeItem('selectedModelId');
+    sessionStorage.removeItem('selectedContentId');
+    sessionStorage.removeItem('selectedContentModelName');
     // Refresh data after save
     if (currentPage === 'models') {
       loadModels();
@@ -276,7 +279,7 @@ function App() {
     setSelectedModel(model);
     setCurrentView('detail');
     if (model.id) {
-      localStorage.setItem('selectedModelId', model.id);
+      sessionStorage.setItem('selectedModelId', model.id);
     }
   };
 
@@ -286,8 +289,8 @@ function App() {
     setSelectedModel(model);
     setCurrentView('detail');
     if (content.id) {
-      localStorage.setItem('selectedContentId', content.id);
-      localStorage.setItem('selectedContentModelName', model.name);
+      sessionStorage.setItem('selectedContentId', content.id);
+      sessionStorage.setItem('selectedContentModelName', model.name);
     }
   };
 
