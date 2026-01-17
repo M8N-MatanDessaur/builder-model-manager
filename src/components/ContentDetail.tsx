@@ -131,31 +131,47 @@ function DataRow({ fieldName, fieldValue, fieldDef, depth = 0, path, onEditField
       {(hasChildren || isArray) && isExpanded && (
         <div className="nested-fields">
           {isArray ? (
+            // For arrays, render each item with the parent's subFields definition
             fieldValue.map((item: any, index: number) => (
               <DataRow
                 key={index}
                 fieldName={`[${index}]`}
                 fieldValue={item}
+                fieldDef={fieldDef?.subFields ? { ...fieldDef, name: `[${index}]` } : undefined}
                 depth={depth + 1}
                 path={currentPath}
                 onEditField={onEditField}
               />
             ))
-          ) : (
-            Object.entries(fieldValue).map(([key, value]) => {
-              const subFieldDef = fieldDef?.subFields?.find(f => f.name === key);
+          ) : fieldDef?.subFields && fieldDef.subFields.length > 0 ? (
+            // If model defines subFields, iterate over them (schema-driven order)
+            fieldDef.subFields.map((subField) => {
+              const value = fieldValue[subField.name];
+              if (value === undefined) return null; // Skip if field not present in data
               return (
                 <DataRow
-                  key={key}
-                  fieldName={key}
+                  key={subField.name}
+                  fieldName={subField.name}
                   fieldValue={value}
-                  fieldDef={subFieldDef}
+                  fieldDef={subField}
                   depth={depth + 1}
                   path={currentPath}
                   onEditField={onEditField}
                 />
               );
             })
+          ) : (
+            // Fallback: no schema, iterate over data keys
+            Object.entries(fieldValue).map(([key, value]) => (
+              <DataRow
+                key={key}
+                fieldName={key}
+                fieldValue={value}
+                depth={depth + 1}
+                path={currentPath}
+                onEditField={onEditField}
+              />
+            ))
           )}
         </div>
       )}
