@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil } from 'lucide-react';
+import { Upload, FileJson, ArrowLeft, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
 import type { BuilderContent, BuilderModel, BuilderField } from '../types/builder';
 import { ContentFieldEditor } from './ContentFieldEditor';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -368,6 +368,16 @@ export function ContentDetail({ content, model, onEdit, onBack, onUpdate, onView
           <h2 style={{ marginBottom: 0 }}>Content Data</h2>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          {onViewModel && (
+            <button
+              onClick={onViewModel}
+              title="View Model"
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#2d7a3e', borderColor: '#2d7a3e', color: '#ffffff' }}
+            >
+              <FileText size={18} />
+              <span>View Model</span>
+            </button>
+          )}
           <button
             onClick={handleExport}
             title="Export Content"
