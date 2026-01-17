@@ -219,6 +219,8 @@ function App() {
 
   // Navigate from ModelDetail to ContentList with that model pre-selected
   const handleViewModelContentEntries = (model: BuilderModel) => {
+    console.log('handleViewModelContentEntries called with model:', model.name);
+    console.log('Setting currentPage to: content, currentView to: list');
     setCurrentPage('content');
     setCurrentView('list');
     setContentListInitialModel(model);
@@ -302,6 +304,7 @@ function App() {
 
       {currentPage === 'models' && (
         <>
+          {console.log('Rendering models page, currentView:', currentView, 'selectedModel:', selectedModel?.name)}
           {currentView === 'list' && (
             <ModelList
               models={models}
@@ -342,6 +345,7 @@ function App() {
 
       {currentPage === 'content' && (
         <>
+          {console.log('Rendering content page, currentView:', currentView, 'models.length:', models.length, 'initialSelectedModel:', contentListInitialModel?.name)}
           {currentView === 'list' && (
             <ContentList
               models={models}

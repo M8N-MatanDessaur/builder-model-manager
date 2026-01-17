@@ -626,7 +626,12 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
-                    onClick={() => onViewContentEntries(selectedModel)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('View Content clicked, model:', selectedModel.name);
+                      onViewContentEntries(selectedModel);
+                    }}
                     title="View Content Entries"
                     style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#2d7a3e', borderColor: '#2d7a3e', color: '#ffffff' }}
                   >
