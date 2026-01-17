@@ -229,16 +229,14 @@ function App() {
     localStorage.removeItem('selectedContentModelName');
   };
 
-  // Navigate from ContentDetail to ModelDetail
+  // Navigate from ContentDetail to ModelList (split-panel view)
   const handleContentViewModel = async (model: BuilderModel) => {
     setCurrentPage('models');
-    setCurrentView('detail');
-    setSelectedModel(model);
+    setCurrentView('list');
+    setSelectedModel(null);
     setSelectedContent(null);
     setContentListInitialModel(null);
-    if (model.id) {
-      localStorage.setItem('selectedModelId', model.id);
-    }
+    localStorage.removeItem('selectedModelId');
     localStorage.removeItem('selectedContentId');
     localStorage.removeItem('selectedContentModelName');
   };
@@ -311,6 +309,7 @@ function App() {
               onViewModel={handleViewModel}
               onCreateNew={handleCreateNewModel}
               onRefresh={loadModels}
+              onViewContentEntries={handleViewModelContentEntries}
             />
           )}
 
