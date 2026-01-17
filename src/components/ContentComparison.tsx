@@ -18,7 +18,7 @@ interface DiffResult {
   type: DiffType;
 }
 
-export function ContentComparison({ leftContent, rightContent, onClose }: ContentComparisonProps) {
+export function ContentComparison({ leftContent, rightContent, model, onClose }: ContentComparisonProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
 
   const togglePath = (path: string) => {
@@ -34,10 +34,22 @@ export function ContentComparison({ leftContent, rightContent, onClose }: Conten
   const diffs = useMemo(() => {
     const results: DiffResult[] = [];
 
-    const compareObjects = (left: any, right: any, path: string = '') => {
-      const leftKeys = left && typeof left === 'object' ? Object.keys(left) : [];
-      const rightKeys = right && typeof right === 'object' ? Object.keys(right) : [];
-      const allKeys = new Set([...leftKeys, ...rightKeys]);
+    const compareObjects = (left: any, right: any, path: string = '', isTopLevel: boolean = false) => {
+      let allKeys: string[];
+
+      // For top-level comparison, use model field order
+      if (isTopLevel && model) {
+        const modelFieldNames = model.fields.map(f => f.name);
+        const leftKeys = left && typeof left === 'object' ? Object.keys(left) : [];
+        const rightKeys = right && typeof right === 'object' ? Object.keys(right) : [];
+        const extraKeys = [...new Set([...leftKeys, ...rightKeys])].filter(k => !modelFieldNames.includes(k));
+        allKeys = [...modelFieldNames, ...extraKeys];
+      } else {
+        // For nested objects, maintain object key order
+        const leftKeys = left && typeof left === 'object' ? Object.keys(left) : [];
+        const rightKeys = right && typeof right === 'object' ? Object.keys(right) : [];
+        allKeys = [...new Set([...leftKeys, ...rightKeys])];
+      }
 
       allKeys.forEach(key => {
         const currentPath = path ? `${path}.${key}` : key;
@@ -56,7 +68,7 @@ export function ContentComparison({ leftContent, rightContent, onClose }: Conten
           const rightIsObj = rightVal !== null && typeof rightVal === 'object';
 
           if (leftIsObj && rightIsObj && !Array.isArray(leftVal) && !Array.isArray(rightVal)) {
-            compareObjects(leftVal, rightVal, currentPath);
+            compareObjects(leftVal, rightVal, currentPath, false);
           } else if (Array.isArray(leftVal) && Array.isArray(rightVal)) {
             if (JSON.stringify(leftVal) !== JSON.stringify(rightVal)) {
               results.push({ path: currentPath, leftValue: leftVal, rightValue: rightVal, type: 'modified' });
@@ -76,9 +88,9 @@ export function ContentComparison({ leftContent, rightContent, onClose }: Conten
       });
     };
 
-    compareObjects(leftContent.data, rightContent.data);
+    compareObjects(leftContent.data, rightContent.data, '', true);
     return results;
-  }, [leftContent, rightContent]);
+  }, [leftContent, rightContent, model]);
 
   const formatValue = (value: any): string => {
     if (value === null) return 'null';

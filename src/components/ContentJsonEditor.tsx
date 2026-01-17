@@ -4,6 +4,7 @@ import { builderApi } from '../services/builderApi';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 import { ConfirmationModal } from './ConfirmationModal';
 import { LoadingSpinner } from './LoadingSpinner';
+import { normalizeFieldOrder } from '../utils/fieldOrder';
 
 interface ContentJsonEditorProps {
   content?: BuilderContent;
@@ -24,13 +25,14 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
 
   useEffect(() => {
     if (content) {
-      // Editing existing content
+      // Editing existing content - normalize field order to match model
+      const normalizedData = normalizeFieldOrder(content.data, model);
       setJsonContent(
         JSON.stringify(
           {
             name: content.name,
             published: content.published || 'draft',
-            data: content.data,
+            data: normalizedData,
           },
           null,
           2
@@ -163,19 +165,22 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
     setError('');
 
     try {
+      // Normalize field order to match model definition
+      const normalizedData = normalizeFieldOrder(parsedContent.data, model);
+
       if (content && content.id) {
         // Update existing content
         await builderApi.updateContent(model.name, content.id, {
           name: parsedContent.name,
           published: parsedContent.published || 'draft',
-          data: parsedContent.data,
+          data: normalizedData,
         });
       } else {
         // Create new content
         await builderApi.createContent(model.name, {
           name: parsedContent.name,
           published: parsedContent.published || 'draft',
-          data: parsedContent.data,
+          data: normalizedData,
         });
       }
 
