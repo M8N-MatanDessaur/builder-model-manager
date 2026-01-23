@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderContent, BuilderModel } from '../types/builder';
 import { ConfirmationModal } from './ConfirmationModal';
 import { LoadingSpinner } from './LoadingSpinner';
+import { MonacoJsonEditor } from './MonacoJsonEditor';
 import { normalizeFieldOrder } from '../utils/fieldOrder';
 
 interface ContentJsonEditorProps {
@@ -20,8 +21,6 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
   const [error, setError] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [parsedContent, setParsedContent] = useState<any>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
     if (content) {
@@ -72,47 +71,6 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
       );
     }
   }, [content, model]);
-
-  useEffect(() => {
-    if (highlightRef.current && textareaRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  }, [jsonContent]);
-
-  const escapeHtml = (text: string): string => {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  };
-
-  const syntaxHighlight = (json: string): string => {
-    // First escape HTML entities to prevent HTML injection
-    const escaped = escapeHtml(json);
-
-    // Then apply syntax highlighting with non-greedy matching
-    return escaped
-      // Keys (property names in quotes followed by colon)
-      .replace(/&quot;([^&quot;]+?)&quot;:/g, '<span class="json-key">&quot;$1&quot;</span>:')
-      // String values (in quotes)
-      .replace(/: &quot;(.*?)&quot;/g, ': <span class="json-string">&quot;$1&quot;</span>')
-      // Numbers
-      .replace(/: (-?\d+\.?\d*)(,?)$/gm, ': <span class="json-number">$1</span>$2')
-      // Booleans
-      .replace(/: (true|false)(,?)$/gm, ': <span class="json-boolean">$1</span>$2')
-      // Null
-      .replace(/: (null)(,?)$/gm, ': <span class="json-null">$1</span>$2');
-  };
-
-  const handleScroll = () => {
-    if (highlightRef.current && textareaRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  };
 
   const validateJson = () => {
     setValidationError('');
@@ -194,6 +152,11 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
     }
   };
 
+  const handleJsonChange = (value: string) => {
+    setJsonContent(value);
+    setValidationError('');
+  };
+
   return (
     <>
       {saving && <LoadingSpinner message={content ? 'Updating content...' : 'Creating content...'} fullscreen />}
@@ -229,68 +192,12 @@ export function ContentJsonEditor({ content, model, onSave, onCancel }: ContentJ
 
       {error && <div className="error">{error}</div>}
 
-      <div className="editor-container" style={{ position: 'relative' }}>
-        <pre
-          ref={highlightRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            margin: 0,
-            padding: '16px',
-            border: '1px solid #333333',
-            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '1.5',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            wordBreak: 'normal',
-            overflowWrap: 'break-word',
-            overflow: 'auto',
-            boxSizing: 'border-box',
-            backgroundColor: '#1a1a1a',
-            color: '#a0a0a0',
-            pointerEvents: 'none',
-          }}
-          dangerouslySetInnerHTML={{ __html: syntaxHighlight(jsonContent) }}
-        />
-        <textarea
-          ref={textareaRef}
+      <div className="editor-container">
+        <MonacoJsonEditor
           value={jsonContent}
-          onChange={(e) => {
-            setJsonContent(e.target.value);
-            setValidationError('');
-          }}
-          onScroll={handleScroll}
-          spellCheck={false}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            margin: 0,
-            padding: '16px',
-            border: '1px solid #333333',
-            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '1.5',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            wordBreak: 'normal',
-            overflowWrap: 'break-word',
-            overflow: 'auto',
-            boxSizing: 'border-box',
-            backgroundColor: 'transparent',
-            color: 'transparent',
-            caretColor: '#e0e0e0',
-            outline: 'none',
-            resize: 'none',
-          }}
+          onChange={handleJsonChange}
+          height="100%"
+          readOnly={saving}
         />
       </div>
 

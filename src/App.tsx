@@ -325,6 +325,7 @@ function App() {
               models={models}
               loading={modelsLoading}
               onViewModel={handleViewModel}
+              onEditModel={handleEditModel}
               onCreateNew={handleCreateNewModel}
               onRefresh={loadModels}
               onViewContentEntries={handleViewModelContentEntries}

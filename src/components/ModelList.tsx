@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Upload, Download, Network, List, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText } from 'lucide-react';
+import { Plus, Upload, Download, Network, List, ChevronDown, ChevronRight, CornerDownRight, Pencil, FileText, FileJson } from 'lucide-react';
 import { builderApi } from '../services/builderApi';
 import type { BuilderModel, BuilderField } from '../types/builder';
 import { getModelDisplayName } from '../types/builder';
@@ -13,6 +13,7 @@ interface ModelListProps {
   models: BuilderModel[];
   loading: boolean;
   onViewModel: (model: BuilderModel) => void;
+  onEditModel: (model: BuilderModel) => void;
   onCreateNew: () => void;
   onRefresh: () => void;
   onViewContentEntries: (model: BuilderModel) => void;
@@ -153,7 +154,7 @@ function FieldRow({ field, depth = 0, path, onEditField }: FieldRowProps) {
   );
 }
 
-export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh, onViewContentEntries }: ModelListProps) {
+export function ModelList({ models, loading, onViewModel, onEditModel, onCreateNew, onRefresh, onViewContentEntries }: ModelListProps) {
   const [selectedModel, setSelectedModel] = useState<BuilderModel | null>(null);
   const [error, setError] = useState('');
   const [modelToDelete, setModelToDelete] = useState<BuilderModel | null>(null);
@@ -643,6 +644,14 @@ export function ModelList({ models, loading, onViewModel, onCreateNew, onRefresh
                     style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     <Upload size={18} />
+                  </button>
+                  <button
+                    className="primary"
+                    onClick={() => onEditModel(selectedModel)}
+                    title="Edit Full JSON"
+                    style={{ backgroundColor: '#4a9eff', borderColor: '#4a9eff', color: '#ffffff', fontWeight: 'bold', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FileJson size={18} />
                   </button>
                 </div>
               </div>

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ConfirmationModal } from './ConfirmationModal';
 import { MediaPreviewModal } from './MediaPreviewModal';
+import { MonacoJsonEditor } from './MonacoJsonEditor';
 import type { FieldType } from '../types/builder';
 
 interface ContentFieldEditorProps {
@@ -18,8 +19,6 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [parsedValue, setParsedValue] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLPreElement>(null);
 
   // Determine if we should use JSON editor or simple text editor
   const useJsonEditor = !fieldType || ['object', 'list'].includes(fieldType);
@@ -61,42 +60,6 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
       setJsonContent(JSON.stringify(value, null, 2));
     }
   }, [value, useJsonEditor, useHtmlEditor, useTextEditor, useNumberEditor, useBooleanEditor]);
-
-  useEffect(() => {
-    if (highlightRef.current && textareaRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  }, [jsonContent]);
-
-  const escapeHtml = (text: string): string => {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  };
-
-  const syntaxHighlight = (json: string): string => {
-    // First escape HTML entities to prevent HTML injection
-    const escaped = escapeHtml(json);
-
-    // Then apply syntax highlighting with non-greedy matching to handle escaped HTML
-    return escaped
-      .replace(/&quot;([^&quot;]+?)&quot;:/g, '<span class="json-key">&quot;$1&quot;</span>:')
-      .replace(/: &quot;(.*?)&quot;/g, ': <span class="json-string">&quot;$1&quot;</span>')
-      .replace(/: (-?\d+\.?\d*)(,?)$/gm, ': <span class="json-number">$1</span>$2')
-      .replace(/: (true|false)(,?)$/gm, ': <span class="json-boolean">$1</span>$2')
-      .replace(/: (null)(,?)$/gm, ': <span class="json-null">$1</span>$2');
-  };
-
-  const handleScroll = () => {
-    if (highlightRef.current && textareaRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  };
 
   const handleSaveClick = () => {
     setError('');
@@ -208,57 +171,13 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
       );
     }
 
-    // JSON editor for complex types
-    // Both layers MUST have identical styling for proper alignment
-    const sharedEditorStyle: React.CSSProperties = {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      margin: 0,
-      padding: '16px', // explicit pixel value instead of var
-      border: '1px solid #333333',
-      fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-      fontSize: '14px',
-      fontWeight: 400,
-      lineHeight: '1.5',
-      whiteSpace: 'pre-wrap', // pre-wrap preserves formatting and wraps long lines
-      wordWrap: 'break-word',
-      wordBreak: 'normal',
-      overflowWrap: 'break-word',
-      overflow: 'auto',
-      boxSizing: 'border-box',
-    };
-
+    // JSON editor for complex types (object, list)
     return (
-      <div className="modal-editor" style={{ position: 'relative' }}>
-        <pre
-          ref={highlightRef}
-          style={{
-            ...sharedEditorStyle,
-            backgroundColor: '#1a1a1a',
-            color: '#a0a0a0',
-            pointerEvents: 'none',
-          }}
-          dangerouslySetInnerHTML={{ __html: syntaxHighlight(jsonContent) }}
-        />
-        <textarea
-          ref={textareaRef}
+      <div className="modal-editor" style={{ minHeight: '300px' }}>
+        <MonacoJsonEditor
           value={jsonContent}
-          onChange={(e) => setJsonContent(e.target.value)}
-          onScroll={handleScroll}
-          onKeyDown={handleKeyDown}
-          spellCheck={false}
-          autoFocus
-          style={{
-            ...sharedEditorStyle,
-            backgroundColor: 'transparent',
-            color: 'transparent',
-            caretColor: '#e0e0e0',
-            outline: 'none',
-            resize: 'none',
-          }}
+          onChange={setJsonContent}
+          height="300px"
         />
       </div>
     );
@@ -286,7 +205,7 @@ export function ContentFieldEditor({ path, value, fieldType, onSave, onCancel }:
         />
       )}
 
-      <div className="modal-overlay">
+      <div className="modal-overlay" onKeyDown={handleKeyDown}>
         <div className="modal-content">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
             <h2 style={{ margin: 0 }}>Edit Field: {fieldName}</h2>
