@@ -23,7 +23,19 @@ export function AIInsight({ context, position = 'inline', compact = false }: AII
   const chatInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Check if API key exists and auto-load insight on mount
+  // Reset state when navigating to a different model/content
+  useEffect(() => {
+    // Reset the loaded flag so we re-fetch for the new context
+    hasLoadedRef.current = false;
+    // Clear previous insight and chat state
+    setInsight('');
+    setError('');
+    setChatOpen(false);
+    setChatMessages([]);
+    setChatInput('');
+  }, [context.type, context.model?.id, context.content?.id]);
+
+  // Check if API key exists and auto-load insight
   useEffect(() => {
     const stored = localStorage.getItem('builder_credentials');
     if (stored) {
